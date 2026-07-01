@@ -1,45 +1,24 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { useColorScheme } from "react-native";
+import { Stack } from 'expo-router';
+import { View, StyleSheet, useColorScheme } from 'react-native';
+import { SeniorTabBar } from '@/components/ui/senior-tab-bar';
+import { SeniorHeader } from '@/components/ui/senior-header';
+import { Colors } from '@/constants/theme';
 
-import { Colors } from "@/constants/theme";
-
-export default function SeniorTabLayout() {
+export default function SeniorLayout() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === "unspecified" ? "light" : scheme];
+  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   return (
-    <NativeTabs
-      backgroundColor={colors.backgroundElement}
-      indicatorColor={colors.primary}
-      labelStyle={{ selected: { color: colors.primary } }}
-    >
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="assistant">
-        <NativeTabs.Trigger.Label>Assistant</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="waveform.circle.fill" md="assistant" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="medications">
-        <NativeTabs.Trigger.Label>Meds</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="pill.fill" md="medication" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="vault">
-        <NativeTabs.Trigger.Label>Vault</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf="photo.fill.on.rectangle.fill"
-          md="photo_library"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="caregivers">
-        <NativeTabs.Trigger.Label>Caregivers</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="heart.text.square.fill" md="health_and_safety" />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <View style={styles.container}>
+      <SeniorHeader />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+      <SeniorTabBar />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

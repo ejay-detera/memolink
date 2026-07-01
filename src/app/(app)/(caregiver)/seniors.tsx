@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, useColorScheme, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, useColorScheme, ActivityIndicator, Alert, Image, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import { Colors } from '@/constants/theme';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 type Profile = {
   id: string;
@@ -19,6 +20,7 @@ export default function CaregiverSeniorsPage() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
   const { user } = useAuth();
+  const bottomSpace = useBottomSpace();
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -185,7 +187,13 @@ export default function CaregiverSeniorsPage() {
         <Text style={[styles.title, { color: colors.text }]}>Seniors</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView 
+        contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetchConnections} tintColor={colors.primary} />
+        }
+      >
         <View style={styles.searchSection}>
           <View style={[styles.searchBar, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}>
             <Ionicons name="search" size={20} color={colors.text + '80'} style={styles.searchIcon} />
@@ -218,6 +226,7 @@ export default function CaregiverSeniorsPage() {
               renderItem={renderSearchResult}
               showsVerticalScrollIndicator={false}
               style={{ maxHeight: 200 }}
+              scrollEnabled={false}
             />
           </View>
         )}
@@ -241,12 +250,10 @@ export default function CaregiverSeniorsPage() {
             numColumns={2}
             columnWrapperStyle={styles.gridRow}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.gridContainer}
-            onRefresh={fetchConnections}
-            refreshing={loading}
+            scrollEnabled={false}
           />
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -265,8 +272,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   content: {
-    flex: 1,
     paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   searchSection: {
     flexDirection: 'row',

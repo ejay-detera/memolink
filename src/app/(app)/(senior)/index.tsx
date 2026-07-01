@@ -16,6 +16,7 @@ import { StatusChip } from '@/components/ui/StatusChip';
 import { Colors, Spacing, MaxContentWidth } from '@/constants/theme';
 import { HeaderActions } from '@/components/ui/header-actions';
 import { useAuth } from '@/hooks/use-auth';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 // Mood button component with animation
 function MoodButton({ icon, label, selected, onPress }: { icon: any, label: string, selected: boolean, onPress: () => void }) {
@@ -42,6 +43,7 @@ export default function HomeScreen() {
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
   
   const { user } = useAuth();
+  const bottomSpace = useBottomSpace();
   const [mood, setMood] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
 
@@ -84,8 +86,7 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <HeaderActions />
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
           
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
@@ -156,9 +157,9 @@ export default function HomeScreen() {
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.secondary, borderColor: colors.secondary }}
               />
               <PrimaryButton 
-                title="Call Caregiver" 
-                icon={<SymbolView name="phone.fill" tintColor={colors.background} />}
-                onPress={() => router.push('/(app)/(caregiver)' as any)}
+                title="My Caregivers" 
+                icon={<SymbolView name="heart.text.square.fill" tintColor={colors.background} />}
+                onPress={() => router.push('/caregivers')}
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.tertiary, borderColor: colors.tertiary }}
               />
             </View>
@@ -180,7 +181,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     width: '100%',

@@ -9,11 +9,13 @@ import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/ui/Card';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { FAB } from '@/components/ui/FAB';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
 
 export default function MedicationsScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const bottomSpace = useBottomSpace();
   
   const pulseOpacity = useSharedValue(0.7);
 
@@ -36,7 +38,7 @@ export default function MedicationsScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 80 }]} showsVerticalScrollIndicator={false}>
           
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
             <ThemedText type="title" style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32 }}>
@@ -107,7 +109,7 @@ export default function MedicationsScreen() {
 
         </ScrollView>
 
-        <FAB />
+        <FAB style={{ bottom: bottomSpace + Spacing.four }} />
 
       </SafeAreaView>
     </ThemedView>
@@ -120,7 +122,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six + 80, // Extra padding for FAB
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     width: '100%',

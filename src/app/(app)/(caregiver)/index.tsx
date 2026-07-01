@@ -1,19 +1,24 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView, Platform, Pressable, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform, Pressable, useWindowDimensions, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, MaxContentWidth, Shadows } from '@/constants/theme';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 export default function CaregiverDashboard() {
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
+  const scheme = useColorScheme();
+  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const bottomSpace = useBottomSpace();
   
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]} 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 100 }]} 
         showsVerticalScrollIndicator={false}
       >
         {/* Row 1: Stats Bento */}
@@ -147,10 +152,19 @@ export default function CaregiverDashboard() {
       </ScrollView>
 
       {/* FAB */}
-      <Pressable style={styles.fab}>
+      <Pressable 
+        style={({ pressed }) => [
+          styles.fab, 
+          { 
+            backgroundColor: colors.primary,
+            bottom: bottomSpace + 24,
+            transform: [{ scale: pressed ? 0.95 : 1 }] 
+          }
+        ]}
+      >
         <Ionicons name="add" size={32} color="#ffffff" />
       </Pressable>
-    </View>
+    </ThemedView>
   );
 }
 
@@ -412,8 +426,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 112,
-    right: 24,
+    right: Spacing.four,
     width: 64,
     height: 64,
     borderRadius: 20,

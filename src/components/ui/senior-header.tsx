@@ -8,17 +8,22 @@ import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing, Shadows, Rounded } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 
-export function CaregiverHeader() {
+export function SeniorHeader() {
   const insets = useSafeAreaInsets();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [menuVisible, setMenuVisible] = useState(false);
   
+  // Try to get initials for the avatar fallback
+  const firstName = user?.user_metadata?.first_name || '';
+  const lastName = user?.user_metadata?.last_name || '';
+  const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'M';
+
   return (
     <View style={[styles.header, { paddingTop: insets.top || Spacing.four }]}>
       <View style={styles.headerLeft}>
         <Image source={require('../../../assets/public/memolink-icon.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
         <ThemedText style={styles.headerTitle} numberOfLines={1}>
-          Caregiver Portal - Arthur's Care
+          MemoLink
         </ThemedText>
       </View>
       <View style={styles.headerRight}>
@@ -33,7 +38,7 @@ export function CaregiverHeader() {
           accessibilityLabel="Profile Menu"
         >
           <View style={styles.avatarFallback}>
-            <ThemedText style={{ color: Colors.light.background, fontWeight: 'bold' }}>M</ThemedText>
+            <ThemedText style={{ color: Colors.light.background, fontWeight: 'bold' }}>{initials}</ThemedText>
           </View>
         </Pressable>
       </View>
@@ -105,7 +110,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-    fontSize: 20,
+    fontSize: 22,
     color: Colors.light.primary,
   },
   headerRight: {

@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { FAB } from '@/components/ui/FAB';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -66,13 +67,14 @@ function PhotoCard({ date, location, title, index }: { date: string, location: s
 export default function VaultScreen() {
   const [filter, setFilter] = useState('all');
   const { user } = useAuth();
+  const bottomSpace = useBottomSpace();
   const firstName = user?.user_metadata?.first_name || 'My';
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 80 }]} showsVerticalScrollIndicator={false}>
           
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
             <ThemedText type="title" style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32 }}>
@@ -99,7 +101,7 @@ export default function VaultScreen() {
 
         </ScrollView>
 
-        <FAB />
+        <FAB style={{ bottom: bottomSpace + Spacing.four }} />
 
       </SafeAreaView>
     </ThemedView>
@@ -112,7 +114,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six + 80, // Extra padding for FAB
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     width: '100%',

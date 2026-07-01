@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -33,6 +34,7 @@ function ChatBubble({ text, isAi, delay }: { text: string, isAi: boolean, delay:
 export default function AssistantScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const bottomSpace = useBottomSpace();
   
   const { user } = useAuth();
   const firstName = user?.user_metadata?.first_name || 'there';
@@ -68,14 +70,14 @@ export default function AssistantScreen() {
       <SafeAreaView style={styles.safeArea}>
         
         {/* Chat History */}
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 100 }]} showsVerticalScrollIndicator={false}>
           <ChatBubble isAi={true} text={`Hello ${firstName}! What would you like help remembering today?`} delay={100} />
           <ChatBubble isAi={false} text="When is my next doctor's appointment?" delay={800} />
           <ChatBubble isAi={true} text="Your next appointment is with Dr. Smith today at 2:30 PM. Should I remind you 30 minutes before?" delay={1600} />
         </ScrollView>
 
         {/* Input Area */}
-        <View style={[styles.inputArea, { borderTopColor: colors.outline }]}>
+        <View style={[styles.inputArea, { borderTopColor: colors.outline, paddingBottom: bottomSpace }]}>
           
           <Animated.View entering={FadeInUp.delay(2000)} style={styles.suggestionsRow}>
             <View style={[styles.suggestionChip, { backgroundColor: colors.backgroundElement }]}>
@@ -116,7 +118,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     width: '100%',

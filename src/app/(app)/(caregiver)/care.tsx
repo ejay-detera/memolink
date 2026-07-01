@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, useColorScheme, TouchableOpacity, ScrollView } 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useBottomSpace } from "@/hooks/use-bottom-space";
 
 import { Colors } from "@/constants/theme";
 
@@ -9,6 +10,7 @@ export default function CaregiverPortalPage() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === "unspecified" ? "light" : scheme];
   const router = useRouter();
+  const bottomSpace = useBottomSpace();
 
   const gridItems = [
     { id: "1", title: "Daily Routines", icon: "sunny", color: "#FF9800" },
@@ -22,7 +24,7 @@ export default function CaregiverPortalPage() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Caregiver Portal</Text>
       </View>
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.content} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]}>
         <Text style={[styles.subtitle, { color: colors.text }]}>Welcome to the Caregiver Portal.</Text>
         
         <View style={styles.gridContainer}>

@@ -53,6 +53,39 @@ export type Database = {
           },
         ]
       }
+      journal_entries: {
+        Row: {
+          id: string
+          user_id: string
+          raw_text: string
+          summary_text: string | null
+          mood: string | null
+          input_method: string
+          created_at: string
+          summarized_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          raw_text: string
+          summary_text?: string | null
+          mood?: string | null
+          input_method?: string
+          created_at?: string
+          summarized_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          raw_text?: string
+          summary_text?: string | null
+          mood?: string | null
+          input_method?: string
+          created_at?: string
+          summarized_at?: string | null
+        }
+        Relationships: []
+      }
       medical_appointments: {
         Row: {
           appointment_date: string

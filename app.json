@@ -38,7 +38,8 @@
         {
           "photosPermission": "The app needs access to your photos to let you set a profile picture."
         }
-      ]
+      ],
+      "expo-speech-recognition"
     ],
     "experiments": {
       "typedRoutes": true,

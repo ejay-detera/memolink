@@ -7,7 +7,8 @@
  */
 
 import { useState } from 'react';
-import { View, TextInput, Text, Pressable, type TextInputProps, useColorScheme, Platform } from 'react-native';
+import { View, TextInput, Text, Pressable, useColorScheme, Platform } from 'react-native';
+import type { TextInputProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,

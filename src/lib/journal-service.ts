@@ -24,18 +24,18 @@ export async function generateSummary(rawText: string): Promise<string | null> {
     });
 
     if (error) {
-      console.error('[JournalService] Edge Function error:', error);
+      console.warn('[JournalService] Edge Function error:', error.message || error);
       return null;
     }
 
     if (data?.error) {
-      console.error('[JournalService] Edge Function returned error:', data.error, data.details);
+      console.warn('[JournalService] Edge Function returned error:', data.error, data.details);
       return null;
     }
 
     return data?.summary || null;
   } catch (error) {
-    console.error('[JournalService] Failed to invoke edge function:', error);
+    console.warn('[JournalService] Failed to invoke edge function:', error);
     return null;
   }
 }
@@ -57,7 +57,7 @@ export async function summarizeEntry(entryId: string, rawText: string): Promise<
       .eq('id', entryId);
 
     if (error) {
-      console.error('[JournalService] Failed to persist summary:', error);
+      console.warn('[JournalService] Failed to persist summary:', error);
     }
   }
 }
@@ -205,9 +205,9 @@ export async function syncPendingSummaries(): Promise<void> {
   try {
     const { error } = await supabase.functions.invoke('retry-pending-summaries');
     if (error) {
-      console.error('[JournalService] Failed to sync pending summaries:', error);
+      console.warn('[JournalService] Failed to sync pending summaries:', error.message || error);
     }
   } catch (error) {
-    console.error('[JournalService] Error invoking retry edge function:', error);
+    console.warn('[JournalService] Error invoking retry edge function:', error);
   }
 }

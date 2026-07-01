@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -33,6 +34,9 @@ export default function AssistantScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
   
+  const { user } = useAuth();
+  const firstName = user?.user_metadata?.first_name || 'there';
+
   const [isListening, setIsListening] = useState(false);
   
   // Pulse animation values
@@ -65,7 +69,7 @@ export default function AssistantScreen() {
         
         {/* Chat History */}
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <ChatBubble isAi={true} text="Hello Sarah! What would you like help remembering today?" delay={100} />
+          <ChatBubble isAi={true} text={`Hello ${firstName}! What would you like help remembering today?`} delay={100} />
           <ChatBubble isAi={false} text="When is my next doctor's appointment?" delay={800} />
           <ChatBubble isAi={true} text="Your next appointment is with Dr. Smith today at 2:30 PM. Should I remind you 30 minutes before?" delay={1600} />
         </ScrollView>

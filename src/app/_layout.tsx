@@ -1,16 +1,40 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { DefaultTheme, ThemeProvider, Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { View } from 'react-native';
 import { useFonts, AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold } from '@expo-google-fonts/atkinson-hyperlegible';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AuthProvider } from '@/providers/auth-provider';
+import { useAuth } from '@/hooks/use-auth';
+import { Colors } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+function RootLayoutNav() {
+  const { isLoading } = useAuth();
+  
+  return (
+    <View style={{ flex: 1 }}>
+      <Slot />
+      {isLoading && <AnimatedSplashOverlay />}
+    </View>
+  );
+}
 
+// Customize React Navigation's default theme to match our pure white background
+const LightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: Colors.light.background,
+    card: Colors.light.backgroundElement,
+    text: Colors.light.text,
+    border: Colors.light.outline,
+    primary: Colors.light.primary,
+  },
+};
+
+export default function TabLayout() {
   const [fontsLoaded, error] = useFonts({
     'AtkinsonHyperlegibleNext-Regular': AtkinsonHyperlegible_400Regular,
     'AtkinsonHyperlegibleNext-Bold': AtkinsonHyperlegible_700Bold,
@@ -21,9 +45,10 @@ export default function TabLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+    <ThemeProvider value={LightTheme}>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

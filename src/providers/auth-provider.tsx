@@ -171,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (params: SignUpParams): Promise<AuthResult> => {
-    const { email, password, firstName, middleName, lastName, role } = params;
+    const { email, password, firstName, middleName, lastName, role, phone } = params;
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -181,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           middle_name: middleName ?? null,
           last_name: lastName,
           role,
+          phone: phone ?? null,
         },
       },
     });

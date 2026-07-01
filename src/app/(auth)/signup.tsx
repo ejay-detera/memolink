@@ -21,6 +21,7 @@ export default function SignupScreen() {
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<AppRole | null>(null);
@@ -59,6 +60,7 @@ export default function SignupScreen() {
       firstName,
       middleName: middleName || undefined,
       lastName,
+      phone: phone || undefined,
       role
     });
     setIsLoading(false);
@@ -150,6 +152,15 @@ export default function SignupScreen() {
                 keyboardType="email-address"
                 autoComplete="email"
                 required
+              />
+
+              <TextInputField
+                label="Phone Number"
+                placeholder="Enter your phone number (optional)"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                autoComplete="tel"
               />
 
               <TextInputField

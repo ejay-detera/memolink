@@ -27,6 +27,9 @@ export default function ProfileScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
+  const [phone, setPhone] = useState(user?.user_metadata?.phone || '');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+
   const avatarUrl = user?.user_metadata?.avatar_url;
   const firstName = user?.user_metadata?.first_name || 'User';
 
@@ -82,6 +85,31 @@ export default function ProfileScreen() {
       Alert.alert('Error', error.message || 'Failed to upload profile picture.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (updatingProfile) return;
+    try {
+      setUpdatingProfile(true);
+      const { error } = await supabase.auth.updateUser({
+        data: { phone }
+      });
+      if (error) throw error;
+      
+      if (user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ phone })
+          .eq('id', user.id);
+        if (profileError) throw profileError;
+      }
+      
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setUpdatingProfile(false);
     }
   };
 
@@ -149,6 +177,29 @@ export default function ProfileScreen() {
             <ThemedText style={{ color: colors.textSecondary, marginTop: Spacing.one }}>
               {user?.email}
             </ThemedText>
+          </View>
+
+          <View style={{ height: 1, backgroundColor: colors.outline, marginVertical: Spacing.six }} />
+
+          {/* Personal Info Section */}
+          <View style={styles.section}>
+            <ThemedText style={{ fontSize: 20, fontFamily: 'AtkinsonHyperlegibleNext-Bold', marginBottom: Spacing.four }}>
+              Personal Info
+            </ThemedText>
+            
+            <View style={{ marginBottom: Spacing.four }}>
+              <TextInputField
+                label="Phone Number"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+            </View>
+            
+            <PrimaryButton 
+              title={updatingProfile ? "Updating..." : "Update Profile"} 
+              onPress={handleUpdateProfile} 
+            />
           </View>
 
           <View style={{ height: 1, backgroundColor: colors.outline, marginVertical: Spacing.six }} />

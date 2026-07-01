@@ -20,6 +20,7 @@ export type Profile = {
   last_name: string;
   role: AppRole;
   avatar_url: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -31,5 +32,6 @@ export type SignUpParams = {
   firstName: string;
   middleName?: string;
   lastName: string;
+  phone?: string;
   role: AppRole;
 };

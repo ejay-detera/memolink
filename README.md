@@ -1,56 +1,81 @@
-# Welcome to your Expo app 👋
+# MemoLink
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is an [Expo](https://expo.dev) project created for **MemoLink**.
 
-## Get started
+## 🚀 Setup & Run the Project
 
-1. Install dependencies
-
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Start the app**
    ```bash
-   npx expo start
+   npm run start
    ```
 
-In the output, you'll find options to open the app in a
+   In the output, you'll find options to open the app in a:
+   - Development build
+   - Android emulator
+   - iOS simulator
+   - Expo Go
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🛠️ MCP Integrations
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+This project is supercharged with AI capabilities using the Model Context Protocol (MCP).
 
-## Get a fresh project
+### Stitch MCP Setup
+Stitch allows the AI assistant to design and generate screens directly into this project.
+- **Enable the Stitch MCP server** in your IDE settings.
+- You can now simply ask the AI to *"Create a design system"* or *"Generate a login screen"*.
+- The AI will use Stitch to generate the React Native code and pull it straight into your project's components.
 
-When you're ready, run:
+### Supabase MCP Setup
+Supabase provides the backend infrastructure (Database, Auth, Storage, Edge Functions).
+- **Enable the Supabase MCP server** in your IDE settings.
+- Ensure your `mcp_config.json` is configured with your Supabase access token so the AI can communicate with your project.
+- The AI can now perform database migrations, list tables, manage Edge Functions, and query data on your behalf.
 
-```bash
-npm run reset-project
-```
+## 🗄️ Adding Supabase to the Project Code
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+To integrate Supabase in the codebase so your app can communicate with the backend, follow these steps:
 
-### Other setup steps
+1. **Environment Variables**
+   Create a `.env` file in the root directory and add your project URL and Anon Key. (These must be prefixed with `EXPO_PUBLIC_` to be accessible in the app):
+   ```env
+   EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   ```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+2. **Supabase Client Initialization**
+   The client is initialized at `src/lib/supabase.ts`. It uses `AsyncStorage` to securely persist user sessions on the device:
+   ```typescript
+   import 'react-native-url-polyfill/auto';
+   import { createClient } from '@supabase/supabase-js';
+   import AsyncStorage from '@react-native-async-storage/async-storage';
 
-## Learn more
+   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL as string;
+   const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
 
-To learn more about developing your project with Expo, look at the following resources:
+   export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+     auth: {
+       storage: AsyncStorage,
+       autoRefreshToken: true,
+       persistSession: true,
+       detectSessionInUrl: false,
+     },
+   });
+   ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+3. **Using Supabase in Components**
+   Simply import the initialized client anywhere in your app to interact with your backend:
+   ```tsx
+   import { supabase } from '../lib/supabase';
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+   // Example: Fetch data
+   async function fetchData() {
+     const { data, error } = await supabase.from('your_table').select('*');
+     if (error) console.error(error);
+     else console.log(data);
+   }
+   ```

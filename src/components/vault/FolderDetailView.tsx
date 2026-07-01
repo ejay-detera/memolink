@@ -8,7 +8,8 @@ import {
   Modal, 
   ActivityIndicator, 
   Platform, 
-  useColorScheme 
+  useColorScheme,
+  Alert
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -70,10 +71,20 @@ export function FolderDetailView({
   const handleUploadFilesClick = async () => {
     try {
       let pickedAssets: Array<{ uri: string, name: string, mimeType?: string }> = [];
+      const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
       if (Platform.OS === 'web') {
         const webFiles = await selectFilesWeb();
         if (!webFiles || webFiles.length === 0) return;
+
+        // Size check for Web
+        const oversized = webFiles.filter(file => file.size > MAX_SIZE_BYTES);
+        if (oversized.length > 0) {
+          const names = oversized.map(f => f.name).join(', ');
+          window.alert(`Upload Failed: The following file(s) exceed the 50MB limit:\n${names}`);
+          return;
+        }
+
         pickedAssets = webFiles.map(file => ({
           uri: URL.createObjectURL(file),
           name: file.name,
@@ -87,6 +98,18 @@ export function FolderDetailView({
         });
 
         if (result.canceled || !result.assets) return;
+
+        // Size check for Native
+        const oversized = result.assets.filter(asset => asset.size && asset.size > MAX_SIZE_BYTES);
+        if (oversized.length > 0) {
+          const names = oversized.map(a => a.name).join(', ');
+          Alert.alert(
+            'Upload Failed',
+            `The following file(s) exceed the 50MB size limit:\n${names}\n\nPlease choose files smaller than 50MB.`
+          );
+          return;
+        }
+
         pickedAssets = result.assets.map(asset => ({
           uri: asset.uri,
           name: asset.name,
@@ -129,8 +152,9 @@ export function FolderDetailView({
       >
         {/* Top row: Back arrow & ellipsis actions menu */}
         <View style={styles.detailHeaderMetaClean}>
-          <Pressable style={styles.backButtonOnlyArrow} onPress={onBack}>
-            <Ionicons name="arrow-back" size={28} color={colors.primary} />
+          <Pressable style={[styles.backButtonOnlyArrow, { flexDirection: 'row', alignItems: 'center', gap: 4 }]} onPress={onBack}>
+            <Ionicons name="arrow-back" size={24} color={colors.primary} />
+            <Text style={{ color: colors.primary, fontSize: 16, fontFamily: 'AtkinsonHyperlegibleNext-Bold' }}>Back</Text>
           </Pressable>
 
           <View style={styles.menuContainerClean}>
@@ -185,6 +209,9 @@ export function FolderDetailView({
         <View style={styles.filesSection}>
           <View style={styles.filesHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Files</Text>
+            <Text style={{ fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 13, color: colors.textSecondary }}>
+              Maximum 50MB per file upload
+            </Text>
           </View>
 
           {files.length === 0 ? (

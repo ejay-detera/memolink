@@ -56,8 +56,8 @@ export function VaultHeader({
         </View>
       </View>
 
-      {/* Switcher bar: only show if caregiver has more than 1 connected senior */}
-      {connectedSeniors.length > 1 && (
+      {/* Switcher bar: show if caregiver has 1 or more connected seniors */}
+      {connectedSeniors.length >= 1 && (
         <View style={styles.vaultSwitcherSection}>
           <Text style={[styles.vaultSwitcherLabel, { color: colors.textSecondary }]}>
             Select Senior Citizen:

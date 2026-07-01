@@ -204,6 +204,8 @@ export function VaultManager() {
                     onPress={() => setSelectedFolder(folder)}
                     cardWidth={cardWidth}
                     getCategoryName={getCategoryName}
+                    onEdit={() => handleEditFolder(folder)}
+                    onDelete={() => handleDeleteFolder(folder)}
                   />
                 ))}
               </View>

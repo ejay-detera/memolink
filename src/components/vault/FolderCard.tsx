@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, Text, Pressable, useColorScheme } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, Pressable, useColorScheme, Alert, Platform, Modal } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -11,11 +11,13 @@ interface FolderCardProps {
   onPress: () => void;
   cardWidth: number;
   getCategoryName: (id: number) => string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
-
-export function FolderCard({ folder, onPress, cardWidth, getCategoryName }: FolderCardProps) {
+export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit, onDelete }: FolderCardProps) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const getFolderCover = (f: Folder) => {
     if (f.image_path) return f.image_path;
@@ -64,12 +66,68 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName }: Fold
         </View>
       )}
       <View style={styles.cardInfo}>
-        <Text style={[styles.cardCategory, { color: colors.primary }]}>
-          {folder.memory_categories?.category_name || getCategoryName(folder.category_id)}
-        </Text>
-        <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
-          {folder.name}
-        </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View style={{ flex: 1, marginRight: Spacing.two }}>
+            <Text style={[styles.cardCategory, { color: colors.primary }]} numberOfLines={1}>
+              {folder.memory_categories?.category_name || getCategoryName(folder.category_id)}
+            </Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
+              {folder.name}
+            </Text>
+          </View>
+          {onEdit && onDelete && (
+            <View style={{ position: 'relative', zIndex: 999 }}>
+              <Pressable 
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setMenuVisible(!menuVisible);
+                }}
+                style={{ padding: 4, marginRight: -4, marginTop: -4 }}
+              >
+                <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
+              </Pressable>
+
+              {menuVisible && (
+                <>
+                  <Pressable 
+                    style={{ 
+                      position: 'absolute', 
+                      top: -1000, 
+                      left: -1000, 
+                      right: -1000, 
+                      bottom: -1000, 
+                      backgroundColor: 'transparent',
+                      zIndex: 998
+                    }} 
+                    onPress={() => setMenuVisible(false)}
+                  />
+                  <View style={[styles.popoverMenu, { backgroundColor: colors.backgroundElement, borderColor: colors.outline }]}>
+                    <Pressable 
+                      style={styles.popoverItem} 
+                      onPress={() => {
+                        setMenuVisible(false);
+                        onEdit();
+                      }}
+                    >
+                      <Ionicons name="create-outline" size={18} color={colors.primary} />
+                      <Text style={[styles.popoverText, { color: colors.text }]}>Edit</Text>
+                    </Pressable>
+                    <Pressable 
+                      style={[styles.popoverItem, { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' }]} 
+                      onPress={() => {
+                        setMenuVisible(false);
+                        onDelete();
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={18} color={colors.error} />
+                      <Text style={[styles.popoverText, { color: colors.error }]}>Delete</Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </View>
+          )}
+        </View>
         {!!folder.desc && (
           <Text style={[styles.cardDesc, { color: colors.textSecondary }]} numberOfLines={2}>
             {folder.desc}
@@ -100,19 +158,23 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName }: Fold
 const styles = StyleSheet.create({
   card: {
     borderRadius: Rounded.lg,
-    overflow: 'hidden',
+    overflow: 'visible',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
   cardImage: {
     width: '100%',
     height: 120,
+    borderTopLeftRadius: Rounded.lg,
+    borderTopRightRadius: Rounded.lg,
   },
   cardImagePlaceholder: {
     width: '100%',
     height: 120,
     alignItems: 'center',
     justifyContent: 'center',
+    borderTopLeftRadius: Rounded.lg,
+    borderTopRightRadius: Rounded.lg,
   },
   cardInfo: {
     padding: Spacing.three,
@@ -146,5 +208,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'AtkinsonHyperlegibleNext-Regular',
     flexShrink: 1,
+  },
+  popoverMenu: {
+    position: 'absolute',
+    right: 0,
+    top: 24,
+    width: 140,
+    borderRadius: Rounded.md,
+    borderWidth: 1.5,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    zIndex: 1000,
+    paddingVertical: 4,
+  },
+  popoverItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  popoverText: {
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    fontSize: 14,
   },
 });

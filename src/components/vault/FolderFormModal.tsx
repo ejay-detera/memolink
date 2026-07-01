@@ -112,6 +112,20 @@ export function FolderFormModal({
       return;
     }
 
+    if (folderDate) {
+      const selected = new Date(folderDate + 'T00:00:00');
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (selected > today) {
+        if (Platform.OS === 'web') {
+          window.alert('Error: Folder date cannot be in the future');
+        } else {
+          Alert.alert('Error', 'Folder date cannot be in the future');
+        }
+        return;
+      }
+    }
+
     setSaving(true);
     const ok = await onSave(
       editingFolder ? editingFolder.id : null,
@@ -304,6 +318,7 @@ export function FolderFormModal({
                 value={folderDate}
                 onChange={(e: any) => setFolderDate(e.target.value)}
                 disabled={saving}
+                max={new Date().toISOString().split('T')[0]}
                 style={{
                   fontFamily: 'AtkinsonHyperlegibleNext-Regular',
                   fontSize: 16,
@@ -334,15 +349,20 @@ export function FolderFormModal({
                 </Pressable>
                 {showDatePicker && (
                   <DateTimePicker
-                    value={new Date(folderDate + 'T00:00:00')}
+                    value={folderDate ? new Date(folderDate + 'T00:00:00') : new Date()}
                     mode="date"
                     display="default"
-                    onChange={(event, selectedDate) => {
+                    maximumDate={new Date()}
+                    onValueChange={(event, selectedDate) => {
                       setShowDatePicker(false);
                       if (selectedDate) {
-                        setFolderDate(selectedDate.toISOString().split('T')[0]);
+                        const y = selectedDate.getFullYear();
+                        const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                        const d = String(selectedDate.getDate()).padStart(2, '0');
+                        setFolderDate(`${y}-${m}-${d}`);
                       }
                     }}
+                    onDismiss={() => setShowDatePicker(false)}
                   />
                 )}
               </>

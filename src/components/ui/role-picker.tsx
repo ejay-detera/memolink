@@ -8,7 +8,7 @@
  */
 
 import { Pressable, Text, View, useColorScheme } from 'react-native';
-import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { Colors, Spacing, Rounded, Typography } from '@/constants/theme';
@@ -21,18 +21,18 @@ type RolePickerProps = {
   onChange: (role: AppRole) => void;
 };
 
-const ROLES: { key: AppRole; label: string; description: string; icon: string }[] = [
+const ROLES: { key: AppRole; label: string; description: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   {
     key: 'senior',
     label: "I'm a Senior",
     description: 'Get help remembering your schedule, meds, and memories.',
-    icon: 'sf:person.fill',
+    icon: 'person',
   },
   {
     key: 'caregiver',
     label: "I'm a Caregiver",
     description: 'Manage schedules, medications, and memories for your loved one.',
-    icon: 'sf:person.2.fill',
+    icon: 'people',
   },
 ];
 
@@ -100,10 +100,10 @@ function RoleCard({
             justifyContent: 'center',
           }}
         >
-          <Image
-            source={role.icon}
-            style={{ width: 28, height: 28 }}
-            tintColor={selected ? (scheme === 'dark' ? '#000' : '#fff') : (colors.outline as string)}
+          <Ionicons
+            name={role.icon}
+            size={28}
+            color={selected ? (scheme === 'dark' ? '#000' : '#fff') : (colors.outline as string)}
           />
         </View>
 
@@ -134,10 +134,10 @@ function RoleCard({
         {/* Checkmark */}
         {selected && (
           <Animated.View entering={FadeIn.duration(200)}>
-            <Image
-              source="sf:checkmark.circle.fill"
-              style={{ width: 24, height: 24 }}
-              tintColor={accent as string}
+            <Ionicons
+              name="checkmark-circle"
+              size={24}
+              color={accent as string}
             />
           </Animated.View>
         )}

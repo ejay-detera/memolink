@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView, useColorScheme, ActivityIndicator, Alert, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
+import { View, StyleSheet, ScrollView, Platform, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -12,14 +11,12 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing, MaxContentWidth } from '@/constants/theme';
+import { Colors, Spacing, MaxContentWidth, Shadows } from '@/constants/theme';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { TextInputField } from '@/components/ui/text-input-field';
 
 export default function ProfileScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   
   const [uploading, setUploading] = useState(false);
@@ -36,7 +33,7 @@ export default function ProfileScreen() {
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.5,
@@ -55,25 +52,20 @@ export default function ProfileScreen() {
       setUploading(true);
       if (!user) return;
 
-      // Read file as base64
       const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
       const fileExt = uri.split('.').pop() || 'jpg';
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
 
-      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, decode(base64), {
+        .upload(fileName, decode(base64), {
           contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`
         });
 
       if (uploadError) throw uploadError;
 
-      // Get Public URL
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
 
-      // Update user metadata
       const { error: updateError } = await supabase.auth.updateUser({
         data: { avatar_url: data.publicUrl }
       });
@@ -142,117 +134,140 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top || Spacing.four }]}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" color="#00366b" size={28} />
+        </Pressable>
+        <ThemedText style={styles.headerTitle}>
+          Profile Settings
+        </ThemedText>
+        <View style={{ width: 44 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={{ padding: Spacing.two, marginLeft: -Spacing.two, width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}>
-            <Ionicons name="chevron-back" color={colors.primary} size={28} />
+        {/* Avatar Section */}
+        <View style={styles.avatarSection}>
+          <Pressable onPress={pickImage} style={styles.avatarContainer}>
+            {uploading ? (
+              <ActivityIndicator color="#00366b" size="large" />
+            ) : avatarUrl ? (
+              <Image source={avatarUrl} style={styles.avatarImage} contentFit="cover" />
+            ) : (
+              <Ionicons name="person-circle" color="#e4e2e2" size={120} />
+            )}
+            <View style={styles.editBadge}>
+              <Ionicons name="camera" color="#ffffff" size={16} />
+            </View>
           </Pressable>
-          <ThemedText style={{ fontSize: 20, fontFamily: 'AtkinsonHyperlegibleNext-Bold', flex: 1, textAlign: 'center', marginRight: 44 }}>
-            Profile Settings
+          <ThemedText style={styles.userName}>
+            {firstName}
+          </ThemedText>
+          <ThemedText style={styles.userEmail}>
+            {user?.email}
           </ThemedText>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Personal Info Bento Card */}
+        <View style={styles.bentoCard}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="person-outline" size={24} color="#00366b" />
+            <ThemedText style={styles.cardTitle}>Personal Info</ThemedText>
+          </View>
           
-          {/* Avatar Section */}
-          <View style={styles.avatarSection}>
-            <Pressable onPress={pickImage} style={[styles.avatarContainer, { borderColor: colors.outline }]}>
-              {uploading ? (
-                <ActivityIndicator color={colors.primary} size="large" />
-              ) : avatarUrl ? (
-                <Image source={avatarUrl} style={styles.avatarImage} contentFit="cover" />
-              ) : (
-                <SymbolView name="person.circle.fill" tintColor={colors.primary} size={80} />
-              )}
-              <View style={[styles.editBadge, { backgroundColor: colors.primary }]}>
-                <SymbolView name="camera.fill" tintColor={colors.background} size={14} />
-              </View>
-            </Pressable>
-            <ThemedText style={{ marginTop: Spacing.three, fontSize: 24, fontFamily: 'AtkinsonHyperlegibleNext-Bold' }}>
-              {firstName}
-            </ThemedText>
-            <ThemedText style={{ color: colors.textSecondary, marginTop: Spacing.one }}>
-              {user?.email}
-            </ThemedText>
-          </View>
-
-          <View style={{ height: 1, backgroundColor: colors.outline, marginVertical: Spacing.six }} />
-
-          {/* Personal Info Section */}
-          <View style={styles.section}>
-            <ThemedText style={{ fontSize: 20, fontFamily: 'AtkinsonHyperlegibleNext-Bold', marginBottom: Spacing.four }}>
-              Personal Info
-            </ThemedText>
-            
-            <View style={{ marginBottom: Spacing.four }}>
-              <TextInputField
-                label="Phone Number"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-            </View>
-            
-            <PrimaryButton 
-              title={updatingProfile ? "Updating..." : "Update Profile"} 
-              onPress={handleUpdateProfile} 
+          <View style={{ marginBottom: Spacing.four }}>
+            <TextInputField
+              label="Phone Number"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
             />
           </View>
+          
+          <PrimaryButton 
+            title={updatingProfile ? "Updating..." : "Save Changes"} 
+            onPress={handleUpdateProfile} 
+          />
+        </View>
 
-          <View style={{ height: 1, backgroundColor: colors.outline, marginVertical: Spacing.six }} />
-
-          {/* Security Section */}
-          <View style={styles.section}>
-            <ThemedText style={{ fontSize: 20, fontFamily: 'AtkinsonHyperlegibleNext-Bold', marginBottom: Spacing.four }}>
-              Change Password
-            </ThemedText>
-            
-            <View style={{ marginBottom: Spacing.three }}>
-              <TextInputField
-                label="New Password"
-                value={password}
-                onChangeText={setPassword}
-                isPassword
-                autoCapitalize="none"
-              />
-            </View>
-            
-            <View style={{ marginBottom: Spacing.four }}>
-              <TextInputField
-                label="Confirm New Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                isPassword
-                autoCapitalize="none"
-              />
-            </View>
-            
-            <PrimaryButton 
-              title={updatingPassword ? "Updating..." : "Update Password"} 
-              onPress={handleUpdatePassword} 
+        {/* Security Bento Card */}
+        <View style={styles.bentoCard}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="lock-closed-outline" size={24} color="#00366b" />
+            <ThemedText style={styles.cardTitle}>Security</ThemedText>
+          </View>
+          
+          <View style={{ marginBottom: Spacing.three }}>
+            <TextInputField
+              label="New Password"
+              value={password}
+              onChangeText={setPassword}
+              isPassword
+              autoCapitalize="none"
             />
           </View>
+          
+          <View style={{ marginBottom: Spacing.four }}>
+            <TextInputField
+              label="Confirm New Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              isPassword
+              autoCapitalize="none"
+            />
+          </View>
+          
+          <PrimaryButton 
+            title={updatingPassword ? "Updating..." : "Update Password"} 
+            onPress={handleUpdatePassword} 
+          />
+        </View>
 
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1 },
+  container: { 
+    flex: 1,
+    backgroundColor: '#fbf9f8',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
+    paddingBottom: Spacing.three,
+    backgroundColor: '#ffffff',
+    ...(Platform.select<any>({
+      ios: Shadows.card,
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
+    })),
+    zIndex: 10,
+  },
+  backButton: {
+    padding: Spacing.two, 
+    marginLeft: -Spacing.two, 
+    width: 44, 
+    height: 44, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {} as any),
+  },
+  headerTitle: {
+    fontSize: 20, 
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold', 
+    color: '#00366b',
+    flex: 1, 
+    textAlign: 'center'
   },
   scrollContent: {
     paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.six,
     paddingBottom: Spacing.six,
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
@@ -260,35 +275,74 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: 'center',
-    marginTop: Spacing.four,
+    marginBottom: Spacing.six,
   },
   avatarContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 2,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    ...(Platform.select<any>({
+      ios: Shadows.card,
+      android: { elevation: 3 },
+      web: { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' },
+    })),
   },
   avatarImage: {
-    width: 116,
-    height: 116,
-    borderRadius: 58,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
   editBadge: {
     position: 'absolute',
     bottom: 0,
-    right: 4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    right: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#00366b',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
+    borderWidth: 3,
+    borderColor: '#fbf9f8',
   },
-  section: {
+  userName: {
+    marginTop: Spacing.three, 
+    fontSize: 28, 
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    color: '#00366b',
+  },
+  userEmail: {
+    color: '#4e617a', 
+    fontSize: 16,
+    marginTop: 4,
+  },
+  bentoCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: Spacing.four,
     marginBottom: Spacing.four,
+    ...(Platform.select<any>({
+      ios: Shadows.card,
+      android: { elevation: 3 },
+      web: { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' },
+    })),
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: Spacing.four,
+    paddingBottom: Spacing.three,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0eded',
+  },
+  cardTitle: {
+    fontSize: 20, 
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    color: '#00366b',
   }
 });

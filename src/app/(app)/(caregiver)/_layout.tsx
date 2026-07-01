@@ -1,36 +1,28 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { useColorScheme } from "react-native";
+import { View, StyleSheet } from 'react-native';
+import { Stack, Redirect } from 'expo-router';
+import { CaregiverTabBar } from '@/components/ui/caregiver-tab-bar';
+import { CaregiverHeader } from '@/components/ui/caregiver-header';
+import { useAuth } from '@/hooks/use-auth';
 
-import { Colors } from "@/constants/theme";
+export default function CaregiverLayout() {
+  const { userRole, isLoading } = useAuth();
 
-export default function CaregiverTabLayout() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === "unspecified" ? "light" : scheme];
+  // Protect the entire caregiver section so only caregivers can access it
+  if (!isLoading && userRole !== 'caregiver') {
+    return <Redirect href="/(app)/(senior)" />;
+  }
 
   return (
-    <NativeTabs
-      backgroundColor={colors.backgroundElement}
-      indicatorColor={colors.primary}
-      labelStyle={{ selected: { color: colors.primary } }}
-    >
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="person.2.fill" md="group" />
-      </NativeTabs.Trigger>
-
-      {/* These screens don't exist yet but will be implemented later */}
-      <NativeTabs.Trigger name="medications">
-        <NativeTabs.Trigger.Label>Meds</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="pill.fill" md="medication" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="vault">
-        <NativeTabs.Trigger.Label>Vault</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf="photo.fill.on.rectangle.fill"
-          md="photo_library"
-        />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <View style={styles.container}>
+      <CaregiverHeader />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fbf9f8' } }} />
+      <CaregiverTabBar />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

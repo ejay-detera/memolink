@@ -1,7 +1,8 @@
-import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native';
+import { StyleSheet, View, ScrollView, useColorScheme, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import Animated, { FadeInDown, FadeInLeft } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -56,7 +57,7 @@ export default function CaregiverScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
   
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const firstName = user?.user_metadata?.first_name || 'Your care recipient';
 
   return (
@@ -112,6 +113,26 @@ export default function CaregiverScreen() {
             </View>
           </Animated.View>
 
+          {/* Log Out Button */}
+          <Animated.View entering={FadeInDown.delay(400)}>
+            <Pressable
+              onPress={() => signOut()}
+              style={({ pressed }) => [
+                styles.logoutBtn,
+                { 
+                  borderColor: colors.error, 
+                  backgroundColor: pressed ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
+                  marginTop: Spacing.four,
+                }
+              ]}
+            >
+              <Ionicons name="log-out-outline" size={22} color={colors.error} />
+              <ThemedText style={{ color: colors.error, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
+                Log Out
+              </ThemedText>
+            </Pressable>
+          </Animated.View>
+
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -164,5 +185,16 @@ const styles = StyleSheet.create({
   activityInfo: {
     flex: 1,
     justifyContent: 'center',
+  },
+  logoutBtn: {
+    minHeight: Spacing.touchTarget,
+    borderRadius: Rounded.default,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
+    marginBottom: Spacing.four,
   },
 });

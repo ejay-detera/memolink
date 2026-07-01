@@ -1,9 +1,10 @@
-import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native';
+import { StyleSheet, View, ScrollView, useColorScheme, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { MedicalAppointment } from '@/types/appointment';
 
@@ -13,7 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
-import { Colors, Spacing, MaxContentWidth } from '@/constants/theme';
+import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
 import { HeaderActions } from '@/components/ui/header-actions';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -41,7 +42,7 @@ export default function HomeScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
   
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [mood, setMood] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
 
@@ -161,6 +162,22 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(app)/(caregiver)' as any)}
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.tertiary, borderColor: colors.tertiary }}
               />
+
+              <Pressable
+                onPress={() => signOut()}
+                style={({ pressed }) => [
+                  styles.logoutBtn,
+                  { 
+                    borderColor: colors.error, 
+                    backgroundColor: pressed ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
+                  }
+                ]}
+              >
+                <Ionicons name="log-out-outline" size={22} color={colors.error} />
+                <ThemedText style={{ color: colors.error, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
+                  Log Out
+                </ThemedText>
+              </Pressable>
             </View>
           </Animated.View>
 
@@ -203,5 +220,17 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     marginTop: Spacing.two,
+  },
+  logoutBtn: {
+    minHeight: Spacing.touchTarget,
+    borderRadius: Rounded.default,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    marginBottom: Spacing.four,
   },
 });

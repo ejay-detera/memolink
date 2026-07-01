@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Platform, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './use-auth';
@@ -21,6 +19,8 @@ export type FileItem = {
   file_type: 'image' | 'video' | 'audio' | 'document';
   file_path: string;
   name: string;
+  uploaded_by?: string;
+  uploader?: { first_name: string | null; last_name: string | null } | null;
 };
 
 export type Folder = {
@@ -31,12 +31,15 @@ export type Folder = {
   image_path: string | null;
   category_id: number;
   user_id: string;
+  folder_date: string;
+  uploaded_by?: string;
+  uploader?: { first_name: string | null; last_name: string | null } | null;
   memory_categories?: Category | null;
   memory_files?: FileItem[];
 };
 
 export function useVault() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   // Data state
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -46,35 +49,100 @@ export function useVault() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
 
+  // Caregiver access to multiple senior citizen vaults
+  const [connectedSeniors, setConnectedSeniors] = useState<{ id: string; name: string }[]>([]);
+  const [activeVaultOwnerId, setActiveVaultOwnerId] = useState<string | null>(null);
+
   // Active folder selection
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
 
+  // Fetch caregiver connections on mount / role changes
+  useEffect(() => {
+    const fetchSeniors = async () => {
+      if (!user || userRole !== 'caregiver') {
+        setConnectedSeniors([]);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('caregiver_senior_connections')
+          .select(`
+            senior_id,
+            profiles!caregiver_senior_connections_senior_id_fkey(id, first_name, last_name)
+          `)
+          .eq('caregiver_id', user.id)
+          .eq('status', 'accepted');
+
+        if (error) throw error;
+        
+        if (data) {
+          const list = data
+            .map((conn: any) => {
+              const prof = conn.profiles;
+              if (!prof) return null;
+              return {
+                id: prof.id,
+                name: `${prof.first_name || ''} ${prof.last_name || ''}`.trim()
+              };
+            })
+            .filter(Boolean) as { id: string; name: string }[];
+          setConnectedSeniors(list);
+        }
+      } catch (err: any) {
+        console.error('Failed to load connected seniors:', err);
+      }
+    };
+
+    fetchSeniors();
+  }, [user, userRole]);
+
+  // Automatically select the first senior's vault for caregiver
+  useEffect(() => {
+    if (userRole === 'caregiver') {
+      if (connectedSeniors.length > 0) {
+        if (!activeVaultOwnerId || !connectedSeniors.some(s => s.id === activeVaultOwnerId)) {
+          setActiveVaultOwnerId(connectedSeniors[0].id);
+        }
+      } else {
+        setActiveVaultOwnerId(null);
+      }
+    } else {
+      setActiveVaultOwnerId(null);
+    }
+  }, [connectedSeniors, userRole, activeVaultOwnerId]);
+
   // Load Categories & Folders
   const loadCategories = useCallback(async () => {
+    const ownerId = activeVaultOwnerId || user?.id;
+    if (!ownerId) return;
     const { data, error } = await supabase
       .from('memory_categories')
       .select('*')
+      .or(`user_id.is.null,user_id.eq.${ownerId}`)
       .order('category_name', { ascending: true });
 
     if (error) throw error;
     setCategories(data || []);
-  }, []);
+  }, [user, activeVaultOwnerId]);
 
   const loadFolders = useCallback(async () => {
-    // Select folders, categories and all files to compute cover fallback
+    const ownerId = activeVaultOwnerId || user?.id;
+    if (!ownerId) return;
+    // Select folders, categories, all files and the profile of the creator
     const { data, error } = await supabase
       .from('memory_folders')
-      .select('*, memory_categories(*), memory_files(*)')
+      .select('*, memory_categories(*), memory_files(*), uploader:profiles!memory_folders_uploaded_by_fkey(first_name, last_name)')
+      .eq('user_id', ownerId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     setFolders(data || []);
-  }, []);
+  }, [user, activeVaultOwnerId]);
 
   const loadFiles = useCallback(async (folderId: string) => {
     const { data, error } = await supabase
       .from('memory_files')
-      .select('*')
+      .select('*, uploader:profiles!memory_files_uploaded_by_fkey(first_name, last_name)')
       .eq('folder_id', folderId)
       .order('created_at', { ascending: false });
 
@@ -101,7 +169,7 @@ export function useVault() {
     if (user) {
       refreshData();
     }
-  }, [user]);
+  }, [user, activeVaultOwnerId]); // Reload everything when activeVaultOwnerId changes!
 
   // Sync files when folder selection changes
   useEffect(() => {
@@ -122,27 +190,41 @@ export function useVault() {
     }
   };
 
+  // Convert any local URI (content://, file://, blob://) to a Blob using XMLHttpRequest.
+  // XHR is the most reliable method in React Native — it goes through the native
+  // content resolver on Android and handles all URI schemes correctly.
+  const uriToBlob = (uri: string): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = () => {
+        resolve(xhr.response);
+      };
+      xhr.onerror = () => {
+        reject(new Error(`XHR failed to read URI: ${uri}`));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+  };
+
   // Upload utility
   const uploadToStorage = async (uri: string, path: string, mimeType?: string): Promise<string> => {
-    if (Platform.OS === 'web') {
-      const response = await fetch(uri);
-      const blob = await response.blob();
+    try {
+      const blob = await uriToBlob(uri);
+      const contentType = mimeType || blob.type || 'application/octet-stream';
+
       const { data, error } = await supabase.storage
         .from('memory-vault')
-        .upload(path, blob, { contentType: mimeType || blob.type, upsert: true });
-      if (error) throw error;
-      
-      const { data: { publicUrl } } = supabase.storage.from('memory-vault').getPublicUrl(path);
-      return publicUrl;
-    } else {
-      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-      const { data, error } = await supabase.storage
-        .from('memory-vault')
-        .upload(path, decode(base64), { contentType: mimeType, upsert: true });
+        .upload(path, blob, { contentType, upsert: true });
+
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage.from('memory-vault').getPublicUrl(path);
       return publicUrl;
+    } catch (err: any) {
+      console.error('[uploadToStorage] Failed:', err?.message || err, 'URI:', uri);
+      throw err;
     }
   };
 
@@ -183,7 +265,8 @@ export function useVault() {
     name: string,
     desc: string,
     categoryId: number,
-    coverUrl: string | null
+    coverUrl: string | null,
+    folderDate?: string
   ): Promise<boolean> => {
     try {
       setLoading(true);
@@ -195,7 +278,8 @@ export function useVault() {
             name: name.trim(),
             desc: desc.trim() || null,
             category_id: categoryId,
-            image_path: coverUrl
+            image_path: coverUrl,
+            ...(folderDate && { folder_date: folderDate })
           })
           .eq('id', id);
 
@@ -209,7 +293,9 @@ export function useVault() {
             desc: desc.trim() || null,
             category_id: categoryId,
             image_path: coverUrl,
-            user_id: user?.id
+            folder_date: folderDate || new Date().toISOString().split('T')[0],
+            user_id: activeVaultOwnerId || user?.id,
+            uploaded_by: user?.id
           });
 
         if (error) throw error;
@@ -292,7 +378,7 @@ export function useVault() {
         .from('memory_categories')
         .insert({
           category_name: name.trim(),
-          user_id: user?.id || null
+          user_id: activeVaultOwnerId || user?.id || null
         })
         .select()
         .single();
@@ -332,7 +418,8 @@ export function useVault() {
             folder_id: folderId,
             name: asset.name,
             file_type: fileType,
-            file_path: publicUrl
+            file_path: publicUrl,
+            uploaded_by: user?.id
           });
 
         if (dbError) throw dbError;
@@ -409,5 +496,8 @@ export function useVault() {
     uploadFiles,
     renameFile,
     deleteFile,
+    connectedSeniors,
+    activeVaultOwnerId,
+    setActiveVaultOwnerId,
   };
 }

@@ -9,11 +9,17 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#1b1c1c',
+    background: '#fbf9f8', // Warm Alabaster
+    backgroundElement: '#ffffff',
+    backgroundSelected: '#f2f0f0',
+    textSecondary: '#424750',
+    primary: '#1b4d89', // Deep Azure
+    secondary: '#2c694e', // Sage Leaf
+    tertiary: '#7e3900', // Warm Ochre
+    error: '#ba1a1a',
+    outline: '#737781',
+    surfaceContainer: '#efeded',
   },
   dark: {
     text: '#ffffff',
@@ -21,6 +27,12 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    primary: '#a7c8ff', 
+    secondary: '#aeeecb', 
+    tertiary: '#ffaa76', 
+    error: '#ffdad6',
+    outline: '#c3c6d1',
+    surfaceContainer: '#303030',
   },
 } as const;
 
@@ -28,37 +40,65 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: 'AtkinsonHyperlegibleNext-Regular',
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: 'AtkinsonHyperlegibleNext-Regular',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
+    sans: 'AtkinsonHyperlegibleNext-Regular',
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
   },
 });
 
+export const Typography = {
+  displayLg: { fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 40, lineHeight: 52 },
+  headlineLg: { fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32, lineHeight: 40 },
+  headlineMd: { fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 24, lineHeight: 32 },
+  bodyLg: { fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 20, lineHeight: 32 },
+  bodyMd: { fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 18, lineHeight: 28 },
+  labelLg: { fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 18, lineHeight: 24 }, // changed from 600 weight to regular to simplify for now unless we load multiple weights
+} as const;
+
 export const Spacing = {
   half: 2,
   one: 4,
   two: 8,
-  three: 16,
-  four: 24,
+  three: 16, // gutter
+  four: 24, // margin
   five: 32,
   six: 64,
+  touchTarget: 56, // min touch target
+  stackSm: 12,
+  stackMd: 24,
+  stackLg: 40,
+} as const;
+
+export const Rounded = {
+  sm: 4,
+  default: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  full: 9999,
+} as const;
+
+export const Shadows = {
+  card: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
+  }
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

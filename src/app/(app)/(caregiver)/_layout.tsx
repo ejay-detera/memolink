@@ -31,6 +31,15 @@ export default function CaregiverTabLayout() {
           md="photo_library"
         />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="care">
+        <NativeTabs.Trigger.Label>Care</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="heart.fill" md="favorite" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="seniors">
+        <NativeTabs.Trigger.Label>Seniors</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.3.fill" md="group" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

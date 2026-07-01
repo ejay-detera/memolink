@@ -1,12 +1,17 @@
 import { DefaultTheme, ThemeProvider, Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import { useFonts, AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold } from '@expo-google-fonts/atkinson-hyperlegible';
+import * as NavigationBar from 'expo-navigation-bar';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/providers/auth-provider';
 import { useAuth } from '@/hooks/use-auth';
 import { Colors } from '@/constants/theme';
+
+if (Platform.OS === 'android') {
+  NavigationBar.setVisibilityAsync('hidden');
+}
 
 SplashScreen.preventAutoHideAsync();
 

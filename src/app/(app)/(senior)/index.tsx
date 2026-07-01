@@ -2,8 +2,10 @@ import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { MedicalAppointment } from '@/types/appointment';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -41,6 +43,40 @@ export default function HomeScreen() {
   
   const { user } = useAuth();
   const [mood, setMood] = useState<string | null>(null);
+  const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!user) return;
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data } = await supabase
+        .from('medical_appointments')
+        .select('*')
+        .eq('senior_id', user.id)
+        .gte('appointment_date', today)
+        .order('appointment_date', { ascending: true })
+        .order('start_time', { ascending: true })
+        .limit(5);
+
+      if (data) setAppointments(data);
+    };
+
+    fetchAppointments();
+  }, [user]);
+
+  const formatTimeStr = (timeStr: string) => {
+    const [h, m] = timeStr.split(':');
+    let hours = parseInt(h, 10);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${hours}:${m} ${ampm}`;
+  };
+
+  const isToday = (dateStr: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    return dateStr === today;
+  };
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const firstName = user?.user_metadata?.first_name || 'there';
@@ -73,27 +109,33 @@ export default function HomeScreen() {
 
           {/* Schedule */}
           <Animated.View entering={FadeInDown.delay(300)}>
-            <SectionHeader title="Today's Schedule" />
+            <SectionHeader title="Upcoming Appointments" />
             
-            <Card index={0}>
-              <View style={styles.scheduleRow}>
-                <View>
-                  <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>Morning Meds</ThemedText>
-                  <ThemedText style={{ color: colors.textSecondary }}>9:00 AM</ThemedText>
-                </View>
-                <StatusChip status="done" label="Taken" />
-              </View>
-            </Card>
-
-            <Card index={1}>
-              <View style={styles.scheduleRow}>
-                <View>
-                  <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>Doctor Appointment</ThemedText>
-                  <ThemedText style={{ color: colors.textSecondary }}>Dr. Smith • 2:30 PM</ThemedText>
-                </View>
-                <StatusChip status="alert" label="Upcoming" />
-              </View>
-            </Card>
+            {appointments.length === 0 ? (
+              <ThemedText style={{ color: colors.textSecondary, fontStyle: 'italic', paddingVertical: Spacing.two }}>
+                You have no upcoming appointments.
+              </ThemedText>
+            ) : (
+              appointments.map((apt, index) => (
+                <Card key={apt.id} index={index}>
+                  <View style={styles.scheduleRow}>
+                    <View style={{ flex: 1, paddingRight: Spacing.two }}>
+                      <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }} numberOfLines={1}>
+                        {apt.title}
+                      </ThemedText>
+                      <ThemedText style={{ color: colors.textSecondary }} numberOfLines={1}>
+                        {isToday(apt.appointment_date) 
+                          ? 'Today' 
+                          : new Date(apt.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        } • {formatTimeStr(apt.start_time)}
+                        {apt.doctor_name && ` • Dr. ${apt.doctor_name}`}
+                      </ThemedText>
+                    </View>
+                    <StatusChip status="alert" label="Upcoming" />
+                  </View>
+                </Card>
+              ))
+            )}
           </Animated.View>
 
           {/* Quick Actions */}

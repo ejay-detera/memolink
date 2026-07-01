@@ -1,8 +1,8 @@
-import { View, StyleSheet } from 'react-native';
-import { Stack, Redirect } from 'expo-router';
-import { CaregiverTabBar } from '@/components/ui/caregiver-tab-bar';
 import { CaregiverHeader } from '@/components/ui/caregiver-header';
+import { CaregiverTabBar } from '@/components/ui/caregiver-tab-bar';
 import { useAuth } from '@/hooks/use-auth';
+import { Redirect, Stack } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
 export default function CaregiverLayout() {
   const { userRole, isLoading } = useAuth();

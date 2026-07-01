@@ -35,6 +35,11 @@ export default function SeniorTabLayout() {
           md="photo_library"
         />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="caregivers">
+        <NativeTabs.Trigger.Label>Caregivers</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="heart.text.square.fill" md="health_and_safety" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

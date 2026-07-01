@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 8,
     overflow: 'hidden',
-    ...(Platform.select({
+    ...(Platform.select<any>({
       ios: Shadows.card,
       android: { elevation: 8 },
       web: { boxShadow: '0 8px 32px rgba(0,0,0,0.1)' },
-    }) as any),
+    })),
   },
   tabButton: {
     flex: 1,

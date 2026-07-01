@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/Card';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
+import { HeaderActions } from '@/components/ui/header-actions';
+import { useAuth } from '@/hooks/use-auth';
 
 function CaregiverCard({ name, relation, phone, index }: { name: string, relation: string, phone: string, index: number }) {
   const scheme = useColorScheme();
@@ -53,12 +55,16 @@ function ActivityLogItem({ time, title, description, icon, index }: { time: stri
 export default function CaregiverScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  
+  const { user } = useAuth();
+  const firstName = user?.user_metadata?.first_name || 'Your care recipient';
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <HeaderActions />
           
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
             <ThemedText type="title" style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32 }}>
@@ -86,14 +92,14 @@ export default function CaregiverScreen() {
                 index={0}
                 time="2 hrs ago" 
                 title="Medication Taken" 
-                description="Sarah logged Metformin (500mg)" 
+                description={`${firstName} logged Metformin (500mg)`} 
                 icon="pill.fill" 
               />
               <ActivityLogItem 
                 index={1}
                 time="Yesterday" 
                 title="Mood Check-in" 
-                description="Sarah reported feeling 'Good'" 
+                description={`${firstName} reported feeling 'Good'`} 
                 icon="face.smiling" 
               />
               <ActivityLogItem 

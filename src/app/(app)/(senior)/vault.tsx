@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { FAB } from '@/components/ui/FAB';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -64,6 +65,8 @@ function PhotoCard({ date, location, title, index }: { date: string, location: s
 
 export default function VaultScreen() {
   const [filter, setFilter] = useState('all');
+  const { user } = useAuth();
+  const firstName = user?.user_metadata?.first_name || 'My';
 
   return (
     <ThemedView style={styles.container}>
@@ -88,7 +91,7 @@ export default function VaultScreen() {
 
           {/* Photo Grid */}
           <View style={styles.photoGrid}>
-            <PhotoCard index={0} date="May 2023" title="Sarah's Wedding" location="Botanical Gardens" />
+            <PhotoCard index={0} date="May 2023" title={`${firstName}'s Wedding`} location="Botanical Gardens" />
             <PhotoCard index={1} date="Dec 2022" title="Christmas Dinner" location="Home" />
             <PhotoCard index={2} date="Aug 2021" title="Beach Trip" location="Sandy Shores" />
             <PhotoCard index={3} date="Jan 2019" title="Skiing" location="Snowy Mountains" />

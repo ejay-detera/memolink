@@ -7,33 +7,23 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+const lightPalette = {
+  text: '#1b1c1c',
+  background: '#ffffff', // Pure white background
+  backgroundElement: '#ffffff',
+  backgroundSelected: '#f2f0f0',
+  textSecondary: '#424750',
+  primary: '#114783', // Deep Azure
+  secondary: '#2c694e', // Sage Leaf
+  tertiary: '#7e3900', // Warm Ochre
+  error: '#ba1a1a',
+  outline: '#737781',
+  surfaceContainer: '#efeded',
+} as const;
+
 export const Colors = {
-  light: {
-    text: '#1b1c1c',
-    background: '#fbf9f8', // Warm Alabaster
-    backgroundElement: '#ffffff',
-    backgroundSelected: '#f2f0f0',
-    textSecondary: '#424750',
-    primary: '#1b4d89', // Deep Azure
-    secondary: '#2c694e', // Sage Leaf
-    tertiary: '#7e3900', // Warm Ochre
-    error: '#ba1a1a',
-    outline: '#737781',
-    surfaceContainer: '#efeded',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    primary: '#a7c8ff', 
-    secondary: '#aeeecb', 
-    tertiary: '#ffaa76', 
-    error: '#ffdad6',
-    outline: '#c3c6d1',
-    surfaceContainer: '#303030',
-  },
+  light: lightPalette,
+  dark: lightPalette,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

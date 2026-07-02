@@ -39,7 +39,13 @@
           "photosPermission": "The app needs access to your photos to let you set a profile picture."
         }
       ],
-      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow MemoLink to access your microphone to ask questions using your voice.",
+          "speechRecognitionPermission": "Allow MemoLink to access speech recognition to understand your questions."
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

@@ -234,13 +234,13 @@ export function VaultManager() {
                 style={[styles.tab, activeTab === 'memories' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
                 onPress={() => setActiveTab('memories')}
               >
-                <Text style={[styles.tabText, { color: activeTab === 'memories' ? colors.primary : colors.textSecondary }]}>All Memories</Text>
+                <ThemedText style={[styles.tabText, { color: activeTab === 'memories' ? colors.primary : colors.textSecondary }]}>All Memories</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.tab, activeTab === 'capsules' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
                 onPress={() => setActiveTab('capsules')}
               >
-                <Text style={[styles.tabText, { color: activeTab === 'capsules' ? colors.primary : colors.textSecondary }]}>Capsules</Text>
+                <ThemedText style={[styles.tabText, { color: activeTab === 'capsules' ? colors.primary : colors.textSecondary }]}>Capsules</ThemedText>
               </TouchableOpacity>
             </View>
 
@@ -248,8 +248,8 @@ export function VaultManager() {
               filteredFolders.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Ionicons name="folder-open-outline" size={64} color={colors.outline} />
-                  <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>No folders found</Text>
-                  <Text style={[styles.emptyStateSub, { color: colors.outline }]}>Create a new folder to get started!</Text>
+                  <ThemedText style={[styles.emptyStateText, { color: colors.textSecondary }]}>No folders found</ThemedText>
+                  <ThemedText style={[styles.emptyStateSub, { color: colors.outline }]}>Create a new folder to get started!</ThemedText>
                 </View>
               ) : (
                 // Folders Grid
@@ -377,21 +377,6 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     width: '100%',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    marginBottom: Spacing.four,
-    borderBottomWidth: 1,
-    borderBottomColor: 'transparent',
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-  },
-  tabText: {
-    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-    fontSize: 16,
   },
   tabsContainer: {
     flexDirection: 'row',

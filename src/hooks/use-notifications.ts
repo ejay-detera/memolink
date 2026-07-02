@@ -36,7 +36,7 @@ export function useNotifications() {
     if (!user) return;
     
     const channel = supabase
-      .channel('public:notifications')
+      .channel(`public:notifications:${user.id}:${Math.random()}`)
       .on(
         'postgres_changes',
         {

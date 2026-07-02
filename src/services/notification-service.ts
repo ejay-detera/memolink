@@ -18,7 +18,7 @@ try {
     });
   }
 } catch (e) {
-  console.warn('expo-notifications is not available in Expo Go. Please use a development build.');
+  // console.warn('expo-notifications is not available in Expo Go. Please use a development build.');
 }
 
 /**
@@ -27,7 +27,7 @@ try {
  */
 export async function registerForPushNotificationsAsync(userId: string) {
   if (!Notifications || !Notifications.setNotificationChannelAsync) {
-    console.warn('Notifications module is not fully available in Expo Go.');
+    // console.warn('Notifications module is not fully available in Expo Go.');
     return undefined;
   }
 

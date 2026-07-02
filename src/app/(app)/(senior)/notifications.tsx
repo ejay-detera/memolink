@@ -103,13 +103,51 @@ export default function NotificationsScreen() {
       });
     });
 
+    // 4. DUMMY DATA FOR DEMO VIDEO
+    const now = new Date();
+    items.push({
+      id: 'dummy-1',
+      type: 'alert',
+      title: 'Caregiver Check-in',
+      body: 'Hi! Just checking if you took your morning vitamins. Love you!',
+      timestamp: new Date(now.getTime() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+      isRead: false,
+    });
+    
+    items.push({
+      id: 'dummy-2',
+      type: 'medication',
+      title: 'Medication Reminder: Lisinopril',
+      body: 'It is time to take 10mg. Take with food.',
+      timestamp: new Date(now.getTime() - 1000 * 60 * 120).toISOString(), // 2 hours ago
+      isRead: true,
+    });
+    
+    items.push({
+      id: 'dummy-3',
+      type: 'appointment',
+      title: 'Upcoming Appointment: Dr. Smith',
+      body: 'You have an appointment at General Hospital at 2:00 PM tomorrow.',
+      timestamp: new Date(now.getTime() + 1000 * 60 * 60 * 24).toISOString(), // tomorrow
+      isRead: false,
+    });
+    
+    items.push({
+      id: 'dummy-4',
+      type: 'alert',
+      title: 'New Memory Capsule',
+      body: 'Sarah just added a new memory from our trip to Hawaii! Open the vault to see it.',
+      timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+      isRead: true,
+    });
+
     // Sort by timestamp descending
     return items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [notifications, medications, appointments]);
 
   const renderItem = ({ item }: { item: NotificationItem }) => {
     let iconName: keyof typeof Ionicons.glyphMap = 'notifications';
-    let iconColor = Colors.light.primary;
+    let iconColor: string = Colors.light.primary;
 
     if (item.type === 'alert') {
       iconName = 'warning';
@@ -166,7 +204,7 @@ export default function NotificationsScreen() {
         </View>
       ) : unifiedNotifications.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="notifications-off-outline" size={64} color={Colors.light.textTertiary} />
+          <Ionicons name="notifications-off-outline" size={64} color={Colors.light.textSecondary} />
           <Text style={styles.emptyText}>You have no notifications</Text>
         </View>
       ) : (
@@ -217,20 +255,24 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.light.backgroundElement,
+    backgroundColor: '#ffffff',
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   unreadCard: {
-    backgroundColor: `${Colors.light.primary}08`,
-    borderColor: Colors.light.primary,
+    backgroundColor: '#f8fbff',
+    borderColor: '#e5f0fc',
     borderWidth: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.light.primary,
   },
   iconContainer: {
     width: 48,
@@ -258,7 +300,7 @@ const styles = StyleSheet.create({
   timestamp: {
     fontSize: 12,
     fontFamily: 'AtkinsonHyperlegibleNext-Regular',
-    color: Colors.light.textTertiary,
+    color: Colors.light.textSecondary,
   },
   unreadDot: {
     width: 10,

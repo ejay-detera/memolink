@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, useColorScheme, View, ActivityIndicator } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -59,9 +59,45 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const bottomSpace = useBottomSpace();
   const [mood, setMood] = useState<string | null>(null);
+  const [moodMessage, setMoodMessage] = useState<string | null>(null);
+  const [isMoodLoading, setIsMoodLoading] = useState(false);
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
 
   const { capsules } = useCapsules(null);
+
+  const handleMoodSelect = async (selectedMood: string) => {
+    if (mood === selectedMood) return; // Ignore if already selected
+    
+    setMood(selectedMood);
+    setMoodMessage(null);
+    setIsMoodLoading(true);
+
+    try {
+      if (!user) return;
+      
+      const moodText = selectedMood === 'good' ? 'good' 
+                     : selectedMood === 'okay' ? 'just okay' 
+                     : 'not great';
+                     
+      const { data, error } = await supabase.functions.invoke('assistant-query', {
+        body: { 
+          question: `I am feeling ${moodText} today. Can you give me a very short, warm, and uplifting 1-2 sentence message?`, 
+          userId: user.id, 
+          userRole: 'senior' 
+        }
+      });
+      
+      if (error) throw error;
+      if (data?.answer) {
+        setMoodMessage(data.answer);
+      }
+    } catch (err) {
+      console.error('Error fetching mood message:', err);
+      setMoodMessage("I'm so glad you checked in today. No matter how you feel, I'm here for you!");
+    } finally {
+      setIsMoodLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -118,7 +154,7 @@ export default function HomeScreen() {
                 Good Morning, {firstName}
               </ThemedText>
             </View>
-            <Pressable onPress={() => router.push('/notifications')} style={styles.notificationBell}>
+            <Pressable onPress={() => router.push('./notifications' as any)} style={styles.notificationBell}>
               <Ionicons name="notifications-outline" size={28} color={colors.text} />
             </Pressable>
           </Animated.View>
@@ -129,10 +165,22 @@ export default function HomeScreen() {
               How are you feeling today?
             </ThemedText>
             <View style={styles.moodRow}>
-              <MoodButton iconIOS="face.smiling" iconOther="happy-outline" label="Good" selected={mood === 'good'} onPress={() => setMood('good')} />
-              <MoodButton iconIOS="face.expressionless" iconOther="remove-circle-outline" label="Okay" selected={mood === 'okay'} onPress={() => setMood('okay')} />
-              <MoodButton iconIOS="face.dashed" iconOther="sad-outline" label="Not Great" selected={mood === 'bad'} onPress={() => setMood('bad')} />
+              <MoodButton iconIOS="face.smiling" iconOther="happy-outline" label="Good" selected={mood === 'good'} onPress={() => handleMoodSelect('good')} />
+              <MoodButton iconIOS="face.expressionless" iconOther="remove-circle-outline" label="Okay" selected={mood === 'okay'} onPress={() => handleMoodSelect('okay')} />
+              <MoodButton iconIOS="face.dashed" iconOther="sad-outline" label="Not Great" selected={mood === 'bad'} onPress={() => handleMoodSelect('bad')} />
             </View>
+
+            {(isMoodLoading || moodMessage) && (
+              <Animated.View entering={FadeInDown} style={[styles.moodMessageContainer, { backgroundColor: colors.surfaceContainer, borderColor: colors.outline }]}>
+                {isMoodLoading ? (
+                  <ActivityIndicator size="small" color={colors.primary} style={{ padding: Spacing.three }} />
+                ) : (
+                  <ThemedText style={{ fontSize: 16, color: colors.text, textAlign: 'center', lineHeight: 24 }}>
+                    {moodMessage}
+                  </ThemedText>
+                )}
+              </Animated.View>
+            )}
           </Animated.View>
 
           {/* New Capsules Banner */}
@@ -266,6 +314,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
+  moodMessageContainer: {
+    marginTop: Spacing.four,
+    padding: Spacing.four,
+    borderRadius: Rounded.lg,
+    borderWidth: 1,
+  },
   scheduleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -273,5 +327,22 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     marginTop: Spacing.two,
+  },
+  capsuleBanner: {
+    flexDirection: 'row',
+    borderRadius: Rounded.lg,
+    padding: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  capsuleBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  capsuleIconContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: Spacing.two,
+    borderRadius: Rounded.md,
   },
 });

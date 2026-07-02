@@ -27,7 +27,7 @@ export function SeniorHeader() {
         </ThemedText>
       </View>
       <View style={styles.headerRight}>
-        <Pressable style={styles.iconButton}>
+        <Pressable style={styles.iconButton} onPress={() => router.push('/(app)/(senior)/notifications' as any)}>
           <Ionicons name="notifications-outline" size={24} color={Colors.light.textSecondary} />
         </Pressable>
         
@@ -95,11 +95,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.three,
     backgroundColor: '#ffffff',
-    ...(Platform.select({
+    ...(Platform.select<any>({
       ios: Shadows.card,
       android: { elevation: 2 },
       web: { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
-    }) as any),
+    })),
     zIndex: 10,
   },
   headerLeft: {

@@ -146,6 +146,84 @@ export type Database = {
           },
         ]
       }
+      memory_capsules: {
+        Row: {
+          caregiver_id: string
+          created_at: string
+          id: string
+          is_viewed: boolean
+          message: string | null
+          senior_id: string
+          title: string
+          trigger_date: string
+        }
+        Insert: {
+          caregiver_id: string
+          created_at?: string
+          id?: string
+          is_viewed?: boolean
+          message?: string | null
+          senior_id: string
+          title: string
+          trigger_date: string
+        }
+        Update: {
+          caregiver_id?: string
+          created_at?: string
+          id?: string
+          is_viewed?: boolean
+          message?: string | null
+          senior_id?: string
+          title?: string
+          trigger_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_capsules_caregiver_id_fkey"
+            columns: ["caregiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_capsules_senior_id_fkey"
+            columns: ["senior_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_capsule_items: {
+        Row: {
+          capsule_id: string
+          memory_file_id: number
+        }
+        Insert: {
+          capsule_id: string
+          memory_file_id: number
+        }
+        Update: {
+          capsule_id?: string
+          memory_file_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_capsule_items_capsule_id_fkey"
+            columns: ["capsule_id"]
+            isOneToOne: false
+            referencedRelation: "memory_capsules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_capsule_items_memory_file_id_fkey"
+            columns: ["memory_file_id"]
+            isOneToOne: false
+            referencedRelation: "memory_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memory_categories: {
         Row: {
           category_name: string

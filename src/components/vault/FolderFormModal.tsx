@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  ScrollView, 
-  Pressable, 
-  TextInput, 
-  Modal, 
-  Platform, 
-  useColorScheme,
-  Alert
-} from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Image } from 'expo-image';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  useColorScheme,
+  View
+} from 'react-native';
 
-import type { Folder, Category } from '@/hooks/use-vault';
-import { Colors, Spacing, Rounded, Shadows } from '@/constants/theme';
+import { Colors, Rounded, Shadows, Spacing } from '@/constants/theme';
+import type { Category, Folder } from '@/hooks/use-vault';
 import { FormButton } from '../ui/form-button';
 
 
@@ -31,12 +31,12 @@ interface FolderFormModalProps {
   pickCoverImage: () => Promise<string | null>;
 }
 
-export function FolderFormModal({ 
-  visible, 
-  onClose, 
-  editingFolder, 
-  onSave, 
-  categories, 
+export function FolderFormModal({
+  visible,
+  onClose,
+  editingFolder,
+  onSave,
+  categories,
   createCategory,
   pickCoverImage
 }: FolderFormModalProps) {
@@ -165,13 +165,13 @@ export function FolderFormModal({
         </View>
 
         {/* Form Container */}
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.fullPageScrollContentForm}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Cover Selector */}
-          <Pressable 
+          <Pressable
             style={[styles.modalCoverSelectFull, { backgroundColor: colors.surfaceContainer }]}
             onPress={handleSelectCover}
             disabled={saving}
@@ -238,15 +238,15 @@ export function FolderFormModal({
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               Category <Text style={{ color: colors.error }}>*</Text>
             </Text>
-            
+
             <View style={styles.dropdownContainer}>
               {categoryDropdownOpen && (
-                <Pressable 
-                  style={styles.dropdownBackdrop} 
-                  onPress={() => setCategoryDropdownOpen(false)} 
+                <Pressable
+                  style={styles.dropdownBackdrop}
+                  onPress={() => setCategoryDropdownOpen(false)}
                 />
               )}
-              <Pressable 
+              <Pressable
                 style={[styles.dropdownTrigger, { borderColor: colors.outline, backgroundColor: colors.surfaceContainer, zIndex: 1002 }]}
                 onPress={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                 disabled={saving}
@@ -254,10 +254,10 @@ export function FolderFormModal({
                 <Text style={[styles.dropdownTriggerText, { color: colors.text }]}>
                   {folderCategoryId ? getCategoryName(folderCategoryId) : 'Select Category'}
                 </Text>
-                <Ionicons 
-                  name={categoryDropdownOpen ? 'chevron-up-outline' : 'chevron-down-outline'} 
-                  size={20} 
-                  color={colors.text} 
+                <Ionicons
+                  name={categoryDropdownOpen ? 'chevron-up-outline' : 'chevron-down-outline'}
+                  size={20}
+                  color={colors.text}
                 />
               </Pressable>
 
@@ -277,8 +277,8 @@ export function FolderFormModal({
                         }}
                       >
                         <Text style={[
-                          styles.dropdownItemText, 
-                          { 
+                          styles.dropdownItemText,
+                          {
                             color: folderCategoryId === cat.id ? colors.primary : colors.text,
                             fontFamily: folderCategoryId === cat.id ? 'AtkinsonHyperlegibleNext-Bold' : 'AtkinsonHyperlegibleNext-Regular'
                           }
@@ -291,7 +291,7 @@ export function FolderFormModal({
 
                   {/* Create Category Modal Switcher */}
                   <View style={[styles.dropdownAddSection, { borderTopColor: colors.outline }]}>
-                    <Pressable 
+                    <Pressable
                       style={styles.dropdownAddBtn}
                       onPress={() => {
                         setCategoryCreateModalVisible(true);
@@ -400,7 +400,7 @@ export function FolderFormModal({
         <View style={styles.modalOverlaySmall}>
           <View style={[styles.modalContentSmall, { backgroundColor: colors.backgroundElement }]}>
             <Text style={[styles.modalTitleSmall, { color: colors.text }]}>Add New Category</Text>
-            
+
             <TextInput
               style={[styles.modalInput, { color: colors.text, borderColor: colors.outline }]}
               placeholder="e.g. Vacation, Medical"

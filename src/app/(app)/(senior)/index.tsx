@@ -17,6 +17,8 @@ import { StatusChip } from '@/components/ui/StatusChip';
 import { Colors, MaxContentWidth, Rounded, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useBottomSpace } from '@/hooks/use-bottom-space';
+import { useCapsules } from '@/hooks/use-capsules';
+import { isPast, isToday, parseISO } from 'date-fns';
 
 const isIOS = Platform.OS === 'ios';
 
@@ -36,10 +38,10 @@ function MoodButton({ iconIOS, iconOther, label, selected, onPress }: { iconIOS:
             weight={selected ? 'bold' : 'regular'}
           />
         ) : (
-          <Ionicons 
-            name={iconOther} 
-            size={48} 
-            color={selected ? colors.primary : colors.outline} 
+          <Ionicons
+            name={iconOther}
+            size={48}
+            color={selected ? colors.primary : colors.outline}
           />
         )}
         <ThemedText style={{ color: selected ? colors.primary : colors.textSecondary, fontSize: 16 }}>
@@ -58,6 +60,8 @@ export default function HomeScreen() {
   const bottomSpace = useBottomSpace();
   const [mood, setMood] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
+
+  const { capsules } = useCapsules(null);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -79,6 +83,12 @@ export default function HomeScreen() {
     fetchAppointments();
   }, [user]);
 
+  // Find newly triggered capsules
+  const availableCapsules = capsules.filter(c => {
+    const d = parseISO(c.trigger_date);
+    return (isToday(d) || isPast(d)) && !c.is_viewed;
+  });
+
   const formatTimeStr = (timeStr: string) => {
     const [h, m] = timeStr.split(':');
     let hours = parseInt(h, 10);
@@ -87,7 +97,7 @@ export default function HomeScreen() {
     return `${hours}:${m} ${ampm}`;
   };
 
-  const isToday = (dateStr: string) => {
+  const isAppointmentToday = (dateStr: string) => {
     const today = new Date().toISOString().split('T')[0];
     return dateStr === today;
   };
@@ -124,6 +134,41 @@ export default function HomeScreen() {
               <MoodButton iconIOS="face.dashed" iconOther="sad-outline" label="Not Great" selected={mood === 'bad'} onPress={() => setMood('bad')} />
             </View>
           </Animated.View>
+
+          {/* New Capsules Banner */}
+          {availableCapsules.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(250)} style={{ marginBottom: Spacing.four }}>
+              {availableCapsules.map((cap, index) => (
+                <Pressable
+                  key={cap.id}
+                  onPress={() => router.push(`/capsules/${cap.id}` as any)}
+                  style={({ pressed }) => [
+                    styles.capsuleBanner,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                      transform: [{ scale: pressed ? 0.98 : 1 }]
+                    }
+                  ]}
+                >
+                  <View style={styles.capsuleBannerContent}>
+                    <View style={styles.capsuleIconContainer}>
+                      <SymbolView name="gift.fill" tintColor={colors.primary} size={28} />
+                    </View>
+                    <View style={{ flex: 1, paddingLeft: Spacing.three }}>
+                      <ThemedText style={{ color: colors.background, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
+                        New Memory Capsule!
+                      </ThemedText>
+                      <ThemedText style={{ color: colors.background, opacity: 0.9 }}>
+                        {cap.title}
+                      </ThemedText>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color={colors.background} />
+                  </View>
+                </Pressable>
+              ))}
+            </Animated.View>
+          )}
 
           {/* Schedule */}
           <Animated.View entering={FadeInDown.delay(300).springify()}>

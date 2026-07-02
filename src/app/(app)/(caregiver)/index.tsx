@@ -1,11 +1,10 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView, Platform, Pressable, useWindowDimensions, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Platform, Pressable, ScrollView, StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing, MaxContentWidth, Shadows } from '@/constants/theme';
+import { Colors, MaxContentWidth, Shadows, Spacing } from '@/constants/theme';
 import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 export default function CaregiverDashboard() {
@@ -14,11 +13,11 @@ export default function CaregiverDashboard() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const bottomSpace = useBottomSpace();
-  
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 100 }]} 
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 100 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Row 1: Stats Bento */}
@@ -47,7 +46,7 @@ export default function CaregiverDashboard() {
           <View style={[styles.bentoCard, styles.appointmentCard, isLargeScreen && { flex: 1 }]}>
             <ThemedText style={[styles.labelLg, { color: 'rgba(255,255,255,0.8)' }]}>Next Appointment</ThemedText>
             <ThemedText style={styles.appointmentTitle}>Tomorrow 2 PM</ThemedText>
-            
+
             <View style={styles.appointmentDetailBadge}>
               <Ionicons name="calendar" size={20} color="#ffffff" />
               <View style={{ marginLeft: 8 }}>
@@ -55,7 +54,7 @@ export default function CaregiverDashboard() {
                 <ThemedText style={styles.badgeSub}>Dr. Aris Thorne - Cardiology</ThemedText>
               </View>
             </View>
-            
+
             <Pressable style={styles.appointmentButton}>
               <Ionicons name="map" size={20} color={Colors.light.primary} />
               <ThemedText style={styles.appointmentButtonText}>Get Directions</ThemedText>
@@ -152,13 +151,13 @@ export default function CaregiverDashboard() {
       </ScrollView>
 
       {/* FAB */}
-      <Pressable 
+      <Pressable
         style={({ pressed }) => [
-          styles.fab, 
-          { 
+          styles.fab,
+          {
             backgroundColor: colors.primary,
             bottom: bottomSpace + 24,
-            transform: [{ scale: pressed ? 0.95 : 1 }] 
+            transform: [{ scale: pressed ? 0.95 : 1 }]
           }
         ]}
       >

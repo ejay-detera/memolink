@@ -1,11 +1,12 @@
-import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useState, useEffect } from 'react';
-import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { MedicalAppointment } from '@/types/appointment';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -13,8 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
-import { Colors, Spacing, MaxContentWidth } from '@/constants/theme';
-import { HeaderActions } from '@/components/ui/header-actions';
+import { Colors, MaxContentWidth, Rounded, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useBottomSpace } from '@/hooks/use-bottom-space';
 
@@ -22,13 +22,13 @@ import { useBottomSpace } from '@/hooks/use-bottom-space';
 function MoodButton({ icon, label, selected, onPress }: { icon: any, label: string, selected: boolean, onPress: () => void }) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
-  
+
   return (
     <Animated.View style={[{ alignItems: 'center', gap: Spacing.one }, selected && { transform: [{ scale: 1.1 }] }]}>
-      <SymbolView 
-        name={icon} 
-        size={48} 
-        tintColor={selected ? colors.primary : colors.outline} 
+      <SymbolView
+        name={icon}
+        size={48}
+        tintColor={selected ? colors.primary : colors.outline}
         weight={selected ? 'bold' : 'regular'}
       />
       <ThemedText style={{ color: selected ? colors.primary : colors.textSecondary, fontSize: 16 }} onPress={onPress}>
@@ -41,7 +41,7 @@ function MoodButton({ icon, label, selected, onPress }: { icon: any, label: stri
 export default function HomeScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
-  
+
   const { user } = useAuth();
   const bottomSpace = useBottomSpace();
   const [mood, setMood] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export default function HomeScreen() {
     const fetchAppointments = async () => {
       if (!user) return;
       const today = new Date().toISOString().split('T')[0];
-      
+
       const { data } = await supabase
         .from('medical_appointments')
         .select('*')
@@ -87,7 +87,7 @@ export default function HomeScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
-          
+
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
             <ThemedText type="subtitle" style={{ color: colors.textSecondary }}>{today}</ThemedText>
@@ -111,7 +111,7 @@ export default function HomeScreen() {
           {/* Schedule */}
           <Animated.View entering={FadeInDown.delay(300)}>
             <SectionHeader title="Upcoming Appointments" />
-            
+
             {appointments.length === 0 ? (
               <ThemedText style={{ color: colors.textSecondary, fontStyle: 'italic', paddingVertical: Spacing.two }}>
                 You have no upcoming appointments.
@@ -125,8 +125,8 @@ export default function HomeScreen() {
                         {apt.title}
                       </ThemedText>
                       <ThemedText style={{ color: colors.textSecondary }} numberOfLines={1}>
-                        {isToday(apt.appointment_date) 
-                          ? 'Today' 
+                        {isToday(apt.appointment_date)
+                          ? 'Today'
                           : new Date(apt.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         } • {formatTimeStr(apt.start_time)}
                         {apt.doctor_name && ` • Dr. ${apt.doctor_name}`}
@@ -142,26 +142,42 @@ export default function HomeScreen() {
           {/* Quick Actions */}
           <Animated.View entering={FadeInDown.delay(400)}>
             <SectionHeader title="Quick Actions" />
-            
+
             <View style={styles.quickActions}>
-              <PrimaryButton 
-                title="Talk to AI Assistant" 
+              <PrimaryButton
+                title="Talk to AI Assistant"
                 icon={<SymbolView name="waveform.circle" tintColor={colors.background} />}
                 onPress={() => router.push('/assistant')}
                 style={{ marginBottom: Spacing.three }}
               />
-              <PrimaryButton 
-                title="View Memories" 
+              <PrimaryButton
+                title="View Memories"
                 icon={<SymbolView name="photo.stack" tintColor={colors.background} />}
                 onPress={() => router.push('/vault')}
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.secondary, borderColor: colors.secondary }}
               />
-              <PrimaryButton 
-                title="My Caregivers" 
+              <PrimaryButton
+                title="My Caregivers"
                 icon={<SymbolView name="heart.text.square.fill" tintColor={colors.background} />}
                 onPress={() => router.push('/caregivers')}
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.tertiary, borderColor: colors.tertiary }}
               />
+
+              <Pressable
+                onPress={() => signOut()}
+                style={({ pressed }) => [
+                  styles.logoutBtn,
+                  {
+                    borderColor: colors.error,
+                    backgroundColor: pressed ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
+                  }
+                ]}
+              >
+                <Ionicons name="log-out-outline" size={22} color={colors.error} />
+                <ThemedText style={{ color: colors.error, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
+                  Log Out
+                </ThemedText>
+              </Pressable>
             </View>
           </Animated.View>
 
@@ -203,5 +219,17 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     marginTop: Spacing.two,
+  },
+  logoutBtn: {
+    minHeight: Spacing.touchTarget,
+    borderRadius: Rounded.default,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    marginBottom: Spacing.four,
   },
 });

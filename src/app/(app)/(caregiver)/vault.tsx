@@ -1,17 +1,14 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function CaregiverVaultScreen() {
+import { ThemedView } from '@/components/themed-view';
+import { VaultManager } from '@/components/vault/vault-manager';
+
+export default function VaultScreen() {
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.content}>
-          <ThemedText type="title" style={styles.title}>Vault</ThemedText>
-          <ThemedText style={styles.subtitle}>Coming soon...</ThemedText>
-        </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <VaultManager />
       </SafeAreaView>
     </ThemedView>
   );
@@ -20,19 +17,4 @@ export default function CaregiverVaultScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  content: {
-    flex: 1,
-    padding: Spacing.four,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-    fontSize: 24,
-    marginBottom: Spacing.two,
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-  }
 });

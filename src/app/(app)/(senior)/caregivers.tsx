@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, useColorScheme, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, useColorScheme, Alert, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -24,9 +24,13 @@ export default function SeniorCaregiversPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [pendingInvitations, setPendingInvitations] = useState<ConnectionItem[]>([]);
+   const [pendingInvitations, setPendingInvitations] = useState<ConnectionItem[]>([]);
   const [connectedCaregivers, setConnectedCaregivers] = useState<ConnectionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Terms & Conditions Modal state
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [selectedConnection, setSelectedConnection] = useState<ConnectionItem | null>(null);
 
   const fetchConnections = useCallback(async () => {
     if (!user) return;
@@ -128,7 +132,10 @@ export default function SeniorCaregiversPage() {
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.actionButton, styles.acceptButton, { backgroundColor: colors.primary }]}
-          onPress={() => handleAccept(item.connection_id)}
+          onPress={() => {
+            setSelectedConnection(item);
+            setTermsModalVisible(true);
+          }}
         >
           <Text style={styles.acceptButtonText}>Accept</Text>
         </TouchableOpacity>
@@ -205,6 +212,70 @@ export default function SeniorCaregiversPage() {
           </>
         }
       />
+
+      {/* TERMS & CONDITIONS ACCEPTANCE MODAL */}
+      <Modal
+        visible={termsModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setTermsModalVisible(false);
+          setSelectedConnection(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Caregiver Access Terms</Text>
+            
+            <Text style={[styles.modalDesc, { color: colors.text + 'b0' }]}>
+              By accepting <Text style={{ fontWeight: 'bold', color: colors.text }}>{selectedConnection?.first_name} {selectedConnection?.last_name}</Text> as your caregiver, you agree to grant them permissions to:
+            </Text>
+
+            <View style={styles.termsList}>
+              <View style={styles.termsItem}>
+                <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} style={{ marginTop: 2 }} />
+                <Text style={[styles.termsText, { color: colors.text }]}>
+                  <Text style={{ fontWeight: 'bold' }}>Access Memory Vault:</Text> View and create folders, and upload photos, videos, and documents to your vault.
+                </Text>
+              </View>
+              <View style={styles.termsItem}>
+                <Ionicons name="medical-outline" size={22} color={colors.primary} style={{ marginTop: 2 }} />
+                <Text style={[styles.termsText, { color: colors.text }]}>
+                  <Text style={{ fontWeight: 'bold' }}>Add Medication & Schedule:</Text> Create and modify routines, medication times, and calendar appointments.
+                </Text>
+              </View>
+            </View>
+
+            <Text style={[styles.modalWarning, { color: colors.error }]}>
+              Make sure you trust this person before granting them access to your data.
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalCancelBtn, { borderColor: colors.outline }]}
+                onPress={() => {
+                  setTermsModalVisible(false);
+                  setSelectedConnection(null);
+                }}
+              >
+                <Text style={[styles.modalCancelText, { color: colors.text }]}>Decline</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalAcceptBtn, { backgroundColor: colors.primary }]}
+                onPress={async () => {
+                  if (selectedConnection) {
+                    await handleAccept(selectedConnection.connection_id);
+                    setTermsModalVisible(false);
+                    setSelectedConnection(null);
+                  }
+                }}
+              >
+                <Text style={styles.modalAcceptText}>Agree & Accept</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -324,5 +395,74 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 14,
     lineHeight: 22,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  modalDesc: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  termsList: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  termsItem: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  modalWarning: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    marginBottom: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelBtn: {
+    borderWidth: 1,
+  },
+  modalAcceptBtn: {
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalAcceptText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

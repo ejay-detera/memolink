@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, useColorScheme, ActivityIndicator, Alert, Image, ScrollView, RefreshControl } from 'react-native';
+import { View, StyleSheet, TextInput, Pressable, FlatList, ActivityIndicator, Alert, ScrollView, RefreshControl } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors } from '@/constants/theme';
+import { Colors, Spacing, Rounded, MaxContentWidth, Shadows } from '@/constants/theme';
 import { useBottomSpace } from '@/hooks/use-bottom-space';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from 'react-native';
 
 type Profile = {
   id: string;
@@ -126,135 +130,141 @@ export default function CaregiverSeniorsPage() {
     const isPending = pendingSeniorIds.has(item.id);
     
     return (
-      <View style={[styles.searchResultItem, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}>
+      <View style={[styles.searchResultItem, { backgroundColor: colors.backgroundElement }]}>
         <View style={styles.profileInfo}>
           <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
             {item.avatar_url ? (
-               <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+               <Image source={item.avatar_url} style={styles.avatar} contentFit="cover" />
             ) : (
-              <Text style={[styles.avatarInitials, { color: colors.primary }]}>
+              <ThemedText style={[styles.avatarInitials, { color: colors.primary }]}>
                 {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
-              </Text>
+              </ThemedText>
             )}
           </View>
-          <Text style={[styles.profileName, { color: colors.text }]}>
+          <ThemedText style={[styles.profileName, { color: colors.text }]}>
             {item.first_name} {item.last_name}
-          </Text>
+          </ThemedText>
         </View>
-        <TouchableOpacity 
+        <Pressable 
           style={[
             styles.inviteButton, 
-            { backgroundColor: isPending ? colors.text + '20' : colors.primary }
+            { backgroundColor: isPending ? colors.surfaceContainer : colors.primary }
           ]}
           onPress={() => handleInvite(item.id)}
           disabled={isPending}
         >
-          <Text style={[styles.inviteButtonText, isPending && { color: colors.text + '80' }]}>
+          <ThemedText style={[styles.inviteButtonText, { color: isPending ? colors.textSecondary : '#ffffff' }]}>
             {isPending ? 'Invited' : 'Invite'}
-          </Text>
-        </TouchableOpacity>
+          </ThemedText>
+        </Pressable>
       </View>
     );
   };
 
   const renderConnectedSenior = ({ item }: { item: Profile & { connection_id: string } }) => (
-    <TouchableOpacity 
-      style={[styles.gridItem, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}
+    <Pressable 
+      style={({ pressed }) => [
+        styles.gridItem, 
+        { backgroundColor: colors.backgroundElement },
+        pressed && { opacity: 0.8 }
+      ]}
       onPress={() => router.push(`/senior/${item.id}`)}
-      activeOpacity={0.7}
     >
       <View style={[styles.gridAvatar, { backgroundColor: colors.primary + '20' }]}>
         {item.avatar_url ? (
-           <Image source={{ uri: item.avatar_url }} style={styles.gridAvatarImage} />
+           <Image source={item.avatar_url} style={styles.gridAvatarImage} contentFit="cover" />
         ) : (
-          <Text style={[styles.gridAvatarInitials, { color: colors.primary }]}>
+          <ThemedText style={[styles.gridAvatarInitials, { color: colors.primary }]}>
             {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
-          </Text>
+          </ThemedText>
         )}
       </View>
-      <Text style={[styles.gridName, { color: colors.text }]} numberOfLines={1}>
+      <ThemedText style={[styles.gridName, { color: colors.text }]} numberOfLines={1}>
         {item.first_name}
-      </Text>
-      <Text style={[styles.gridLastName, { color: colors.text + '80' }]} numberOfLines={1}>
+      </ThemedText>
+      <ThemedText style={[styles.gridLastName, { color: colors.textSecondary }]} numberOfLines={1}>
         {item.last_name}
-      </Text>
-    </TouchableOpacity>
+      </ThemedText>
+    </Pressable>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Seniors</Text>
-      </View>
-
-      <ScrollView 
-        contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]} 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={fetchConnections} tintColor={colors.primary} />
-        }
-      >
-        <View style={styles.searchSection}>
-          <View style={[styles.searchBar, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}>
-            <Ionicons name="search" size={20} color={colors.text + '80'} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search by exact first or last name"
-              placeholderTextColor={colors.text + '50'}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-            />
-          </View>
-          <TouchableOpacity 
-            style={[styles.searchButton, { backgroundColor: colors.primary }]} 
-            onPress={handleSearch}
-          >
-            <Text style={styles.searchButtonText}>Find</Text>
-          </TouchableOpacity>
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <View style={styles.header}>
+          <ThemedText style={[styles.title, { color: colors.text }]}>Seniors</ThemedText>
         </View>
 
-        {isSearching && <ActivityIndicator style={{ marginTop: 20 }} color={colors.primary} />}
+        <ScrollView 
+          contentContainerStyle={[styles.content, { paddingBottom: bottomSpace + Spacing.five }]} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={fetchConnections} tintColor={colors.primary} />
+          }
+        >
+          <View style={styles.searchSection}>
+            <View style={[styles.searchBar, { backgroundColor: colors.backgroundElement }]}>
+              <Ionicons name="search" size={20} color={colors.outline} style={styles.searchIcon} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Search by exact first or last name"
+                placeholderTextColor={colors.outline}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onSubmitEditing={handleSearch}
+                returnKeyType="search"
+              />
+            </View>
+            <Pressable 
+              style={[styles.searchButton, { backgroundColor: colors.primary }]} 
+              onPress={handleSearch}
+            >
+              <ThemedText style={styles.searchButtonText}>Find</ThemedText>
+            </Pressable>
+          </View>
 
-        {searchResults.length > 0 && (
-          <View style={styles.searchResultsContainer}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Search Results</Text>
+          {isSearching && <ActivityIndicator style={{ marginTop: Spacing.four }} color={colors.primary} />}
+
+          {searchResults.length > 0 && (
+            <View style={styles.searchResultsContainer}>
+              <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Search Results</ThemedText>
+              <FlatList
+                data={searchResults}
+                keyExtractor={item => item.id}
+                renderItem={renderSearchResult}
+                showsVerticalScrollIndicator={false}
+                style={{ maxHeight: 250 }}
+                scrollEnabled={true}
+                nestedScrollEnabled={true}
+              />
+            </View>
+          )}
+
+          <ThemedText style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.five }]}>My Seniors</ThemedText>
+          
+          {loading ? (
+            <ActivityIndicator style={{ marginTop: Spacing.four }} color={colors.primary} />
+          ) : connectedSeniors.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="people-outline" size={64} color={colors.outline} />
+              <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>
+                You haven&apos;t connected with any seniors yet. Use the search bar above to invite them.
+              </ThemedText>
+            </View>
+          ) : (
             <FlatList
-              data={searchResults}
-              keyExtractor={item => item.id}
-              renderItem={renderSearchResult}
+              data={connectedSeniors}
+              keyExtractor={item => item.connection_id}
+              renderItem={renderConnectedSenior}
+              numColumns={2}
+              columnWrapperStyle={styles.gridRow}
               showsVerticalScrollIndicator={false}
-              style={{ maxHeight: 200 }}
               scrollEnabled={false}
             />
-          </View>
-        )}
-
-        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>My Seniors</Text>
-        
-        {loading ? (
-          <ActivityIndicator style={{ marginTop: 20 }} color={colors.primary} />
-        ) : connectedSeniors.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={48} color={colors.text + '40'} />
-            <Text style={[styles.emptyText, { color: colors.text + '80' }]}>
-              You haven&apos;t connected with any seniors yet. Use the search bar above to invite them.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={connectedSeniors}
-            keyExtractor={item => item.connection_id}
-            renderItem={renderConnectedSenior}
-            numColumns={2}
-            columnWrapperStyle={styles.gridRow}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={false}
-          />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
@@ -263,64 +273,68 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.two,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
   content: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: Spacing.four,
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    width: '100%',
   },
   searchSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.four,
   },
   searchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    borderRadius: Rounded.md,
+    paddingHorizontal: Spacing.three,
     height: 48,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: Spacing.two,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
+    fontFamily: 'AtkinsonHyperlegibleNext-Regular',
   },
   searchButton: {
     height: 48,
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginLeft: 10,
+    paddingHorizontal: Spacing.four,
+    borderRadius: Rounded.md,
+    marginLeft: Spacing.two,
   },
   searchButtonText: {
     color: '#fff',
-    fontWeight: '600',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    fontSize: 16,
   },
   searchResultsContainer: {
-    marginBottom: 16,
+    marginBottom: Spacing.four,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: 20,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    marginBottom: Spacing.three,
   },
   searchResultItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
+    padding: Spacing.three,
+    borderRadius: Rounded.lg,
+    marginBottom: Spacing.two,
   },
   profileInfo: {
     flexDirection: 'row',
@@ -332,7 +346,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: Spacing.three,
     overflow: 'hidden',
   },
   avatar: {
@@ -340,53 +354,45 @@ const styles = StyleSheet.create({
     height: 40,
   },
   avatarInitials: {
-    fontWeight: 'bold',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     fontSize: 16,
   },
   profileName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
   inviteButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Rounded.full,
   },
   inviteButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     fontSize: 14,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    padding: Spacing.five,
   },
   emptyText: {
     textAlign: 'center',
-    marginTop: 16,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  gridContainer: {
-    paddingBottom: 20,
+    marginTop: Spacing.four,
+    fontSize: 16,
+    lineHeight: 22,
   },
   gridRow: {
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: Spacing.three,
   },
   gridItem: {
     width: '48%',
     aspectRatio: 0.85,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: Rounded.lg,
+    padding: Spacing.four,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-    elevation: 2,
+    ...(Shadows.card as any),
   },
   gridAvatar: {
     width: 70,
@@ -394,7 +400,7 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: Spacing.three,
     overflow: 'hidden',
   },
   gridAvatarImage: {
@@ -402,12 +408,12 @@ const styles = StyleSheet.create({
     height: 70,
   },
   gridAvatarInitials: {
-    fontWeight: 'bold',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     fontSize: 24,
   },
   gridName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     textAlign: 'center',
   },
   gridLastName: {

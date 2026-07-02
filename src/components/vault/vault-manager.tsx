@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { 
   StyleSheet, 
   View, 
-  Text, 
   ScrollView, 
   useWindowDimensions, 
   useColorScheme, 
@@ -15,9 +14,10 @@ import { useNavigation, useFocusEffect } from 'expo-router';
 
 import { useVault, type Folder, type FileItem } from '@/hooks/use-vault';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, Spacing, Rounded, MaxContentWidth } from '@/constants/theme';
+import { Colors, Spacing, MaxContentWidth } from '@/constants/theme';
 import { FAB } from '../ui/FAB';
 import { FormButton } from '../ui/form-button';
+import { ThemedText } from '@/components/themed-text';
 
 // Subcomponents
 import { VaultHeader } from './VaultHeader';
@@ -146,7 +146,7 @@ export function VaultManager() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading Memory Vault...</Text>
+        <ThemedText style={[styles.loadingText, { color: colors.textSecondary }]}>Loading Memory Vault...</ThemedText>
       </View>
     );
   }
@@ -157,10 +157,10 @@ export function VaultManager() {
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <View style={styles.emptyContainer}>
           <Ionicons name="people-outline" size={72} color={colors.outline} />
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Connected Seniors</Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+          <ThemedText style={[styles.emptyTitle, { color: colors.text }]}>No Connected Seniors</ThemedText>
+          <ThemedText style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
             As a caregiver, you can view and add memories to the vaults of seniors who accept your connection requests.
-          </Text>
+          </ThemedText>
           <FormButton
             title="Invite Senior Citizen"
             onPress={() => navigation.navigate('seniors' as never)}
@@ -191,8 +191,8 @@ export function VaultManager() {
             {filteredFolders.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="folder-open-outline" size={64} color={colors.outline} />
-                <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>No folders found</Text>
-                <Text style={[styles.emptyStateSub, { color: colors.outline }]}>Create a new folder to get started!</Text>
+                <ThemedText style={[styles.emptyStateText, { color: colors.textSecondary }]}>No folders found</ThemedText>
+                <ThemedText style={[styles.emptyStateSub, { color: colors.outline }]}>Create a new folder to get started!</ThemedText>
               </View>
             ) : (
               // Folders Grid
@@ -217,7 +217,7 @@ export function VaultManager() {
               setEditingFolder(null);
               setFolderFormVisible(true);
             }} 
-            iconName="plus" 
+            iconName="add" 
             disableRotation={true} 
           />
         </>
@@ -295,6 +295,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
     paddingBottom: 100,
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    width: '100%',
   },
   grid: {
     flexDirection: 'row',

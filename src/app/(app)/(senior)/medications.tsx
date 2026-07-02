@@ -1,43 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
 import { FAB } from '@/components/ui/FAB';
-import { Colors, Rounded, Spacing } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Colors, MaxContentWidth, Rounded, Shadows, Spacing } from '@/constants/theme';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 import { useMedications, type Medication } from '@/hooks/use-medications';
 
 // Refactored sub-components
 import { MedicationFormModal } from '@/components/medications/MedicationFormModal';
 import { MedicationPreviewModal } from '@/components/medications/MedicationPreviewModal';
 
+const formatTimeStr = (timeStr: string) => {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  let hours = parseInt(h, 10);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${m} ${ampm}`;
+};
+
 export default function SeniorMedicationsScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const scheme = 'light';
+  const colors = Colors[scheme];
+  const bottomSpace = useBottomSpace();
 
   const { medications, logs, loading, saveMedication, deleteMedication, logAdherence } = useMedications(null);
-
-  // Dynamic Date and Time for header
-  const [currentDateTime, setCurrentDateTime] = useState('');
-  useEffect(() => {
-    const updateDateTime = () => {
-      const date = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      };
-      setCurrentDateTime(date.toLocaleString('en-US', options));
-    };
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Filter mode: 'today' | 'all'
   const [filterMode, setFilterMode] = useState<'today' | 'all'>('today');
@@ -166,15 +159,13 @@ export default function SeniorMedicationsScreen() {
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ThemedView style={styles.container}>
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-
-        {/* Header Block without Back Button */}
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: colors.text }]}>Medications</Text>
-            <Text style={[styles.dateTimeText, { color: colors.textSecondary }]}>{currentDateTime}</Text>
-          </View>
+        {/* Section Header */}
+        <View style={styles.header}>
+          <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 28 }}>
+            Medications
+          </ThemedText>
         </View>
 
         {/* Segmented Filter */}
@@ -183,27 +174,27 @@ export default function SeniorMedicationsScreen() {
             onPress={() => setFilterMode('today')}
             style={[styles.segmentBtn, filterMode === 'today' && { backgroundColor: colors.background }]}
           >
-            <Text style={[styles.segmentText, { color: filterMode === 'today' ? colors.primary : colors.textSecondary }]}>
+            <ThemedText style={[styles.segmentText, { color: filterMode === 'today' ? colors.primary : colors.textSecondary }]}>
               Today
-            </Text>
+            </ThemedText>
           </Pressable>
           <Pressable
             onPress={() => setFilterMode('all')}
             style={[styles.segmentBtn, filterMode === 'all' && { backgroundColor: colors.background }]}
           >
-            <Text style={[styles.segmentText, { color: filterMode === 'all' ? colors.primary : colors.textSecondary }]}>
+            <ThemedText style={[styles.segmentText, { color: filterMode === 'all' ? colors.primary : colors.textSecondary }]}>
               All Medications
-            </Text>
+            </ThemedText>
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 100 }]} showsVerticalScrollIndicator={false}>
           {loading ? (
             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : medications.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="medkit-outline" size={64} color={colors.outline} />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</Text>
+              <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</ThemedText>
             </View>
           ) : filterMode === 'today' ? (
             // TODAY SCHEDULE MODE
@@ -212,41 +203,41 @@ export default function SeniorMedicationsScreen() {
                 <View style={[styles.banner, { backgroundColor: colors.tertiary }]}>
                   <Ionicons name="notifications-outline" size={24} color={colors.background} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.background, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
+                    <ThemedText style={{ color: colors.background, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
                       Next Dose in {formatTimeDiff(nextDose.diff)}
-                    </Text>
-                    <Text style={{ color: colors.background, fontSize: 16, fontFamily: 'AtkinsonHyperlegibleNext-Regular' }}>
-                      {nextDose.med.name} ({nextDose.med.dosage}) at {nextDose.time}
-                    </Text>
+                    </ThemedText>
+                    <ThemedText style={{ color: colors.background, fontSize: 16, fontFamily: 'AtkinsonHyperlegibleNext-Regular' }}>
+                      {nextDose.med.name} ({nextDose.med.dosage}) at {formatTimeStr(nextDose.time)}
+                    </ThemedText>
                   </View>
                 </View>
               )}
 
-              <Text style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.four }]}>Today's Routine</Text>
+              <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Today's Routine</ThemedText>
               {todayMeds.length === 0 ? (
                 <View style={styles.empty}>
                   <Ionicons name="medkit-outline" size={64} color={colors.outline} />
-                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</Text>
+                  <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</ThemedText>
                 </View>
               ) : (
                 <View style={{ gap: Spacing.three, marginTop: Spacing.two }}>
                   {todayMeds.map((med, index) => {
                     const isTaken = logs[med.id]?.some(l => l.status === 'taken');
                     return (
-                      <Animated.View key={med.id} entering={FadeInRight.delay(index * 100)}>
-                        <Card style={styles.card}>
+                      <Animated.View key={med.id} entering={FadeInDown.delay(index * 100).springify()}>
+                        <Card style={[styles.card, { backgroundColor: colors.backgroundElement, ...Shadows.card, borderWidth: 0 }]}>
                           <Pressable onPress={() => { setPreviewMed(med); setPreviewVisible(true); }}>
                             <View style={styles.row}>
                               <View style={{ flex: 1, marginRight: Spacing.two }}>
-                                <Text style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</Text>
+                                <ThemedText style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</ThemedText>
                                 {med.instructions && (
-                                  <Text style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
+                                  <ThemedText style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
                                     {med.instructions}
-                                  </Text>
+                                  </ThemedText>
                                 )}
-                                <Text style={[styles.medTimes, { color: colors.primary }]}>
-                                  Times: {med.times.join(', ')}
-                                </Text>
+                                <ThemedText style={[styles.medTimes, { color: colors.primary }]}>
+                                  Times: {med.times.map(formatTimeStr).join(', ')}
+                                </ThemedText>
                               </View>
                               <Pressable
                                 onPress={(e) => {
@@ -260,9 +251,9 @@ export default function SeniorMedicationsScreen() {
                                   size={18}
                                   color={isTaken ? '#fff' : colors.textSecondary}
                                 />
-                                <Text style={{ color: isTaken ? '#fff' : colors.text, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 13 }}>
+                                <ThemedText style={{ color: isTaken ? '#fff' : colors.text, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 13 }}>
                                   {isTaken ? 'Taken' : 'Mark Taken'}
-                                </Text>
+                                </ThemedText>
                               </Pressable>
                             </View>
                           </Pressable>
@@ -276,23 +267,23 @@ export default function SeniorMedicationsScreen() {
           ) : (
             // ALL MEDICATIONS LIST MODE
             <>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Medication Inventory</Text>
+              <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>Medication Inventory</ThemedText>
               <View style={{ gap: Spacing.three, marginTop: Spacing.two }}>
                 {medications.map((med, index) => (
-                  <Animated.View key={med.id} entering={FadeInRight.delay(index * 100)}>
-                    <Card style={styles.card}>
+                  <Animated.View key={med.id} entering={FadeInDown.delay(index * 100).springify()}>
+                    <Card style={[styles.card, { backgroundColor: colors.backgroundElement, ...Shadows.card, borderWidth: 0 }]}>
                       <Pressable onPress={() => { setPreviewMed(med); setPreviewVisible(true); }}>
                         <View style={styles.row}>
                           <View style={{ flex: 1, marginRight: Spacing.two }}>
-                            <Text style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</Text>
+                            <ThemedText style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</ThemedText>
                             {med.instructions && (
-                              <Text style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
+                              <ThemedText style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
                                 {med.instructions}
-                              </Text>
+                              </ThemedText>
                             )}
-                            <Text style={[styles.medTimes, { color: colors.primary }]}>
-                              {med.schedule_type === 'as_needed' ? 'As Needed' : `Times: ${med.times.join(', ')}`}
-                            </Text>
+                            <ThemedText style={[styles.medTimes, { color: colors.primary }]}>
+                              {med.schedule_type === 'as_needed' ? 'As Needed' : `Times: ${med.times.map(formatTimeStr).join(', ')}`}
+                            </ThemedText>
                           </View>
                           <Ionicons name="chevron-forward" size={20} color={colors.outline} />
                         </View>
@@ -304,7 +295,7 @@ export default function SeniorMedicationsScreen() {
             </>
           )}
         </ScrollView>
-        <FAB onPress={handleOpenAdd} iconName="plus" disableRotation={true} />
+        <FAB onPress={handleOpenAdd} iconName="add" disableRotation={true} />
       </SafeAreaView>
 
       <MedicationPreviewModal
@@ -327,7 +318,7 @@ export default function SeniorMedicationsScreen() {
         onSave={saveMedication}
         onRedirectToAll={() => setFilterMode('all')}
       />
-    </View>
+    </ThemedView>
   );
 }
 
@@ -335,21 +326,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  header: {
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.two,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-  },
-  dateTimeText: {
-    fontSize: 14,
-    fontFamily: 'AtkinsonHyperlegibleNext-Regular',
-    marginTop: 2,
+    paddingTop: Spacing.three,
+    marginBottom: Spacing.two,
   },
   segmentContainer: {
     flexDirection: 'row',
@@ -368,19 +348,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
-  scroll: {
+  scrollContent: {
     paddingHorizontal: Spacing.four,
-    paddingBottom: 100,
+    paddingTop: Spacing.one,
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     marginBottom: Spacing.two,
+    marginTop: Spacing.four,
   },
   card: {
     padding: Spacing.four,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
   },
   banner: {
     flexDirection: 'row',
@@ -388,7 +370,7 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     borderRadius: Rounded.lg,
     gap: Spacing.three,
-    marginBottom: Spacing.four,
+    marginBottom: Spacing.two,
   },
   row: {
     flexDirection: 'row',

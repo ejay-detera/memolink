@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
 import { Colors, Shadows } from '@/constants/theme';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -18,6 +19,7 @@ interface FABProps {
 export function FAB({ onPress, iconName = 'plus', disableRotation = false }: FABProps) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const bottomSpace = useBottomSpace();
   
   const rotation = useSharedValue(0);
 
@@ -37,7 +39,7 @@ export function FAB({ onPress, iconName = 'plus', disableRotation = false }: FAB
       }}
       style={[
         styles.fab,
-        { backgroundColor: colors.primary },
+        { backgroundColor: colors.primary, bottom: bottomSpace },
         Shadows.card,
       ]}>
       <Animated.View style={animatedStyle}>

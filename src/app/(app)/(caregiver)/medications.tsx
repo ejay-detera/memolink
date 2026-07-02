@@ -1,44 +1,99 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, FlatList, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
-import { FormButton } from '@/components/ui/form-button';
-import { Colors, Rounded, Spacing } from '@/constants/theme';
-import { useMedications, type Medication } from '@/hooks/use-medications';
+import { FAB } from '@/components/ui/FAB';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Colors, MaxContentWidth, Rounded, Shadows, Spacing } from '@/constants/theme';
+import { useBottomSpace } from '@/hooks/use-bottom-space';
+import { useMedications, type Medication, type SeniorProfile } from '@/hooks/use-medications';
 
 // Refactored sub-components
 import { MedicationFormModal } from '@/components/medications/MedicationFormModal';
 import { MedicationPreviewModal } from '@/components/medications/MedicationPreviewModal';
 
+// ---------------------------------------------------------------------------
+// Senior Selector
+// ---------------------------------------------------------------------------
+
+const formatTimeStr = (timeStr: string) => {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  let hours = parseInt(h, 10);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${m} ${ampm}`;
+};
+
+function SeniorSelector({
+  seniors,
+  selectedId,
+  onSelect,
+  colors,
+}: {
+  seniors: SeniorProfile[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  colors: (typeof Colors)['light'];
+}) {
+  return (
+    <View style={styles.selectorContainer}>
+      <FlatList
+        data={seniors}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.selectorList}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => {
+          const isSelected = item.id === selectedId;
+          return (
+            <Pressable
+              onPress={() => onSelect(item.id)}
+              style={[
+                styles.seniorPill,
+                {
+                  backgroundColor: isSelected ? colors.primary : colors.surfaceContainer,
+                  borderColor: isSelected ? colors.primary : 'transparent',
+                  borderWidth: 2,
+                },
+              ]}
+            >
+              {item.avatar_url ? (
+                <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.background }]}>
+                  <ThemedText style={{ color: colors.primary, fontSize: 12, fontWeight: 'bold' }}>
+                    {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
+                  </ThemedText>
+                </View>
+              )}
+              <ThemedText
+                style={{
+                  color: isSelected ? '#ffffff' : colors.textSecondary,
+                  fontWeight: isSelected ? 'bold' : 'normal',
+                }}
+              >
+                {item.first_name}
+              </ThemedText>
+            </Pressable>
+          );
+        }}
+      />
+    </View>
+  );
+}
+
 export default function CaregiverMedicationsScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const scheme = 'light';
+  const colors = Colors[scheme];
+  const bottomSpace = useBottomSpace();
 
   const [activeSeniorId, setActiveSeniorId] = useState<string | null>(null);
   const { medications, logs, connectedSeniors, loading, saveMedication, deleteMedication, logAdherence } = useMedications(activeSeniorId);
-
-  // Dynamic Date and Time for header
-  const [currentDateTime, setCurrentDateTime] = useState('');
-  useEffect(() => {
-    const updateDateTime = () => {
-      const date = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      };
-      setCurrentDateTime(date.toLocaleString('en-US', options));
-    };
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Auto-select first senior
   useEffect(() => {
@@ -119,41 +174,24 @@ export default function CaregiverMedicationsScreen() {
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ThemedView style={styles.container}>
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
 
-        {/* Header Block without Back Button */}
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: colors.text }]}>Medications</Text>
-            <Text style={[styles.dateTimeText, { color: colors.textSecondary }]}>{currentDateTime}</Text>
-          </View>
+        {/* Section Header */}
+        <View style={styles.header}>
+          <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 28 }}>
+            Medications
+          </ThemedText>
         </View>
 
         {/* Senior Switcher */}
         {connectedSeniors.length > 0 && (
-          <View style={styles.switcher}>
-            <Text style={[styles.switcherLabel, { color: colors.textSecondary }]}>Select Senior:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.switcherScroll}>
-              {connectedSeniors.map(senior => (
-                <Pressable
-                  key={senior.id}
-                  onPress={() => setActiveSeniorId(senior.id)}
-                  style={[
-                    styles.pill,
-                    { backgroundColor: activeSeniorId === senior.id ? colors.primary : colors.surfaceContainer }
-                  ]}
-                >
-                  <Text style={{
-                    color: activeSeniorId === senior.id ? '#fff' : colors.text,
-                    fontFamily: 'AtkinsonHyperlegibleNext-Bold'
-                  }}>
-                    {senior.first_name} {senior.last_name}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
+          <SeniorSelector
+            seniors={connectedSeniors}
+            selectedId={activeSeniorId}
+            onSelect={setActiveSeniorId}
+            colors={colors}
+          />
         )}
 
         {/* Segmented Filter */}
@@ -163,26 +201,26 @@ export default function CaregiverMedicationsScreen() {
               onPress={() => setFilterMode('today')}
               style={[styles.segmentBtn, filterMode === 'today' && { backgroundColor: colors.background }]}
             >
-              <Text style={[styles.segmentText, { color: filterMode === 'today' ? colors.primary : colors.textSecondary }]}>
+              <ThemedText style={[styles.segmentText, { color: filterMode === 'today' ? colors.primary : colors.textSecondary }]}>
                 Today
-              </Text>
+              </ThemedText>
             </Pressable>
             <Pressable
               onPress={() => setFilterMode('all')}
               style={[styles.segmentBtn, filterMode === 'all' && { backgroundColor: colors.background }]}
             >
-              <Text style={[styles.segmentText, { color: filterMode === 'all' ? colors.primary : colors.textSecondary }]}>
+              <ThemedText style={[styles.segmentText, { color: filterMode === 'all' ? colors.primary : colors.textSecondary }]}>
                 All Medications
-              </Text>
+              </ThemedText>
             </Pressable>
           </View>
         )}
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace + 100 }]} showsVerticalScrollIndicator={false}>
           {activeSenior && (
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.three }]}>
+            <ThemedText style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.three }]}>
               {activeSenior.first_name}'s Medications
-            </Text>
+            </ThemedText>
           )}
 
           {loading ? (
@@ -190,13 +228,12 @@ export default function CaregiverMedicationsScreen() {
           ) : !activeSeniorId ? (
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={64} color={colors.outline} />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No Connected Seniors</Text>
+              <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>No Connected Seniors</ThemedText>
             </View>
           ) : medications.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="medkit-outline" size={64} color={colors.outline} />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</Text>
-              <FormButton title="Add Medication" onPress={handleOpenAdd} style={{ marginTop: Spacing.four, width: 220 }} />
+              <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</ThemedText>
             </View>
           ) : filterMode === 'today' ? (
             // TODAY COMPLIANCE LIST
@@ -204,27 +241,27 @@ export default function CaregiverMedicationsScreen() {
               {todayMeds.length === 0 ? (
                 <View style={styles.empty}>
                   <Ionicons name="medkit-outline" size={64} color={colors.outline} />
-                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</Text>
+                  <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>No Medications</ThemedText>
                 </View>
               ) : (
                 <View style={{ gap: Spacing.three, marginTop: Spacing.two }}>
                   {todayMeds.map((med, index) => {
                     const isTaken = logs[med.id]?.some(l => l.status === 'taken');
                     return (
-                      <Animated.View key={med.id} entering={FadeInRight.delay(index * 100)}>
-                        <Card style={styles.card}>
+                      <Animated.View key={med.id} entering={FadeInDown.delay(index * 100).springify()}>
+                        <Card style={[styles.card, { backgroundColor: colors.backgroundElement, ...Shadows.card, borderWidth: 0 }]}>
                           <Pressable onPress={() => { setPreviewMed(med); setPreviewVisible(true); }}>
                             <View style={styles.row}>
                               <View style={{ flex: 1, marginRight: Spacing.two }}>
-                                <Text style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</Text>
+                                <ThemedText style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</ThemedText>
                                 {med.instructions && (
-                                  <Text style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
+                                  <ThemedText style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
                                     {med.instructions}
-                                  </Text>
+                                  </ThemedText>
                                 )}
-                                <Text style={[styles.medTimes, { color: colors.primary }]}>
-                                  Times: {med.times.join(', ')}
-                                </Text>
+                                <ThemedText style={[styles.medTimes, { color: colors.primary }]}>
+                                  Times: {med.times.map(formatTimeStr).join(', ')}
+                                </ThemedText>
                               </View>
                               <Pressable
                                 onPress={(e) => {
@@ -238,9 +275,9 @@ export default function CaregiverMedicationsScreen() {
                                   size={18}
                                   color={isTaken ? '#fff' : colors.textSecondary}
                                 />
-                                <Text style={{ color: isTaken ? '#fff' : colors.text, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 13 }}>
+                                <ThemedText style={{ color: isTaken ? '#fff' : colors.text, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 13 }}>
                                   {isTaken ? 'Taken' : 'Mark Taken'}
-                                </Text>
+                                </ThemedText>
                               </Pressable>
                             </View>
                           </Pressable>
@@ -250,26 +287,25 @@ export default function CaregiverMedicationsScreen() {
                   })}
                 </View>
               )}
-              <FormButton title="Add Medication" onPress={handleOpenAdd} style={{ marginTop: Spacing.three }} />
             </>
           ) : (
             // ALL CATALOG LIST
             <View style={{ gap: Spacing.three, marginTop: Spacing.two }}>
               {medications.map((med, index) => (
-                <Animated.View key={med.id} entering={FadeInRight.delay(index * 100)}>
-                  <Card style={styles.card}>
+                <Animated.View key={med.id} entering={FadeInDown.delay(index * 100).springify()}>
+                  <Card style={[styles.card, { backgroundColor: colors.backgroundElement, ...Shadows.card, borderWidth: 0 }]}>
                     <Pressable onPress={() => { setPreviewMed(med); setPreviewVisible(true); }}>
                       <View style={styles.row}>
                         <View style={{ flex: 1, marginRight: Spacing.two }}>
-                          <Text style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</Text>
+                          <ThemedText style={[styles.medName, { color: colors.text }]}>{med.name} ({med.dosage})</ThemedText>
                           {med.instructions && (
-                            <Text style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
+                            <ThemedText style={{ color: colors.textSecondary, fontFamily: 'AtkinsonHyperlegibleNext-Regular', fontSize: 14 }}>
                               {med.instructions}
-                            </Text>
+                            </ThemedText>
                           )}
-                          <Text style={[styles.medTimes, { color: colors.primary }]}>
-                            {med.schedule_type === 'as_needed' ? 'As Needed' : `Times: ${med.times.join(', ')}`}
-                          </Text>
+                          <ThemedText style={[styles.medTimes, { color: colors.primary }]}>
+                            {med.schedule_type === 'as_needed' ? 'As Needed' : `Times: ${med.times.map(formatTimeStr).join(', ')}`}
+                          </ThemedText>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={colors.outline} />
                       </View>
@@ -277,10 +313,12 @@ export default function CaregiverMedicationsScreen() {
                   </Card>
                 </Animated.View>
               ))}
-              <FormButton title="Add Medication" onPress={handleOpenAdd} style={{ marginTop: Spacing.three }} />
             </View>
           )}
         </ScrollView>
+        {activeSeniorId && (
+          <FAB onPress={handleOpenAdd} iconName="add" disableRotation={true} />
+        )}
       </SafeAreaView>
 
       <MedicationPreviewModal
@@ -303,49 +341,46 @@ export default function CaregiverMedicationsScreen() {
         onSave={saveMedication}
         onRedirectToAll={() => setFilterMode('all')}
       />
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1 },
-  content: {
+  container: {
     flex: 1,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  header: {
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.two,
+    paddingTop: Spacing.three,
+    marginBottom: Spacing.two,
   },
-  title: {
-    fontSize: 32,
-    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-  },
-  dateTimeText: {
-    fontSize: 14,
-    fontFamily: 'AtkinsonHyperlegibleNext-Regular',
-    marginTop: 2,
-  },
-  switcher: {
-    paddingHorizontal: Spacing.four,
+  selectorContainer: {
     marginBottom: Spacing.three,
   },
-  switcherLabel: {
-    fontSize: 12,
-    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
-  switcherScroll: {
+  selectorList: {
+    paddingHorizontal: Spacing.four,
     gap: Spacing.two,
   },
-  pill: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: 8,
+  seniorPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: Spacing.three,
+    paddingLeft: 6,
+    paddingVertical: 6,
     borderRadius: Rounded.full,
+    gap: 8,
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  avatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   segmentContainer: {
     flexDirection: 'row',
@@ -364,9 +399,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
-  scroll: {
+  scrollContent: {
     paddingHorizontal: Spacing.four,
-    paddingBottom: 100,
+    paddingTop: Spacing.one,
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 20,
@@ -375,8 +413,6 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: Spacing.four,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
   },
   row: {
     flexDirection: 'row',

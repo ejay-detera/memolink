@@ -16,6 +16,21 @@ type MedicationPreviewModalProps = {
   onToggleAdherence: (medId: string, isTaken: boolean) => void;
 };
 
+const formatTimeStr = (timeStr: string) => {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  let hours = parseInt(h, 10);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${m} ${ampm}`;
+};
+
+const formatDateStr = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
+
 export function MedicationPreviewModal({
   visible,
   onClose,
@@ -58,7 +73,7 @@ export function MedicationPreviewModal({
             {medication.schedule_type === 'scheduled' && (
               <>
                 <Text style={[styles.previewLabel, { color: colors.textSecondary, marginTop: Spacing.three }]}>Daily Scheduled Times</Text>
-                <Text style={[styles.previewValue, { color: colors.text }]}>{medication.times.join(', ')}</Text>
+                <Text style={[styles.previewValue, { color: colors.text }]}>{medication.times.map(formatTimeStr).join(', ')}</Text>
               </>
             )}
 
@@ -67,13 +82,13 @@ export function MedicationPreviewModal({
                 {medication.start_date && (
                   <View>
                     <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>Start Date</Text>
-                    <Text style={[styles.previewValue, { color: colors.text }]}>{medication.start_date}</Text>
+                    <Text style={[styles.previewValue, { color: colors.text }]}>{formatDateStr(medication.start_date)}</Text>
                   </View>
                 )}
                 {medication.end_date && (
                   <View>
                     <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>End Date</Text>
-                    <Text style={[styles.previewValue, { color: colors.text }]}>{medication.end_date}</Text>
+                    <Text style={[styles.previewValue, { color: colors.text }]}>{formatDateStr(medication.end_date)}</Text>
                   </View>
                 )}
               </View>

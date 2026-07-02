@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,22 +18,34 @@ import { Colors, MaxContentWidth, Rounded, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useBottomSpace } from '@/hooks/use-bottom-space';
 
+const isIOS = Platform.OS === 'ios';
+
 // Mood button component with animation
-function MoodButton({ icon, label, selected, onPress }: { icon: any, label: string, selected: boolean, onPress: () => void }) {
+function MoodButton({ iconIOS, iconOther, label, selected, onPress }: { iconIOS: any, iconOther: any, label: string, selected: boolean, onPress: () => void }) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   return (
     <Animated.View style={[{ alignItems: 'center', gap: Spacing.one }, selected && { transform: [{ scale: 1.1 }] }]}>
-      <SymbolView
-        name={icon}
-        size={48}
-        tintColor={selected ? colors.primary : colors.outline}
-        weight={selected ? 'bold' : 'regular'}
-      />
-      <ThemedText style={{ color: selected ? colors.primary : colors.textSecondary, fontSize: 16 }} onPress={onPress}>
-        {label}
-      </ThemedText>
+      <Pressable onPress={onPress} style={{ alignItems: 'center', gap: Spacing.one }}>
+        {isIOS ? (
+          <SymbolView
+            name={iconIOS}
+            size={48}
+            tintColor={selected ? colors.primary : colors.outline}
+            weight={selected ? 'bold' : 'regular'}
+          />
+        ) : (
+          <Ionicons 
+            name={iconOther} 
+            size={48} 
+            color={selected ? colors.primary : colors.outline} 
+          />
+        )}
+        <ThemedText style={{ color: selected ? colors.primary : colors.textSecondary, fontSize: 16 }}>
+          {label}
+        </ThemedText>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -89,7 +101,7 @@ export default function HomeScreen() {
         <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
 
           {/* Header */}
-          <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
+          <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
             <ThemedText type="subtitle" style={{ color: colors.textSecondary }}>{today}</ThemedText>
             <ThemedText type="title" style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32 }}>
               Good Morning, {firstName}
@@ -97,19 +109,19 @@ export default function HomeScreen() {
           </Animated.View>
 
           {/* Mood Check-in */}
-          <Animated.View entering={FadeInDown.delay(200)} style={styles.moodSection}>
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.moodSection}>
             <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 20, marginBottom: Spacing.three }}>
               How are you feeling today?
             </ThemedText>
             <View style={styles.moodRow}>
-              <MoodButton icon="face.smiling" label="Good" selected={mood === 'good'} onPress={() => setMood('good')} />
-              <MoodButton icon="face.expressionless" label="Okay" selected={mood === 'okay'} onPress={() => setMood('okay')} />
-              <MoodButton icon="face.expressionless" label="Not Great" selected={mood === 'bad'} onPress={() => setMood('bad')} />
+              <MoodButton iconIOS="face.smiling" iconOther="happy-outline" label="Good" selected={mood === 'good'} onPress={() => setMood('good')} />
+              <MoodButton iconIOS="face.expressionless" iconOther="remove-circle-outline" label="Okay" selected={mood === 'okay'} onPress={() => setMood('okay')} />
+              <MoodButton iconIOS="face.dashed" iconOther="sad-outline" label="Not Great" selected={mood === 'bad'} onPress={() => setMood('bad')} />
             </View>
           </Animated.View>
 
           {/* Schedule */}
-          <Animated.View entering={FadeInDown.delay(300)}>
+          <Animated.View entering={FadeInDown.delay(300).springify()}>
             <SectionHeader title="Upcoming Appointments" />
 
             {appointments.length === 0 ? (
@@ -140,44 +152,28 @@ export default function HomeScreen() {
           </Animated.View>
 
           {/* Quick Actions */}
-          <Animated.View entering={FadeInDown.delay(400)}>
+          <Animated.View entering={FadeInDown.delay(400).springify()}>
             <SectionHeader title="Quick Actions" />
 
             <View style={styles.quickActions}>
               <PrimaryButton
                 title="Talk to AI Assistant"
-                icon={<SymbolView name="waveform.circle" tintColor={colors.background} />}
+                icon={isIOS ? <SymbolView name="waveform.circle" tintColor={colors.background} /> : <Ionicons name="mic-circle" size={24} color={colors.background} />}
                 onPress={() => router.push('/assistant')}
                 style={{ marginBottom: Spacing.three }}
               />
               <PrimaryButton
                 title="View Memories"
-                icon={<SymbolView name="photo.stack" tintColor={colors.background} />}
+                icon={isIOS ? <SymbolView name="photo.stack" tintColor={colors.background} /> : <Ionicons name="images" size={24} color={colors.background} />}
                 onPress={() => router.push('/vault')}
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.secondary, borderColor: colors.secondary }}
               />
               <PrimaryButton
                 title="My Caregivers"
-                icon={<SymbolView name="heart.text.square.fill" tintColor={colors.background} />}
+                icon={isIOS ? <SymbolView name="heart.text.square.fill" tintColor={colors.background} /> : <Ionicons name="heart" size={24} color={colors.background} />}
                 onPress={() => router.push('/caregivers')}
                 style={{ marginBottom: Spacing.three, backgroundColor: colors.tertiary, borderColor: colors.tertiary }}
               />
-
-              <Pressable
-                onPress={() => signOut()}
-                style={({ pressed }) => [
-                  styles.logoutBtn,
-                  {
-                    borderColor: colors.error,
-                    backgroundColor: pressed ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
-                  }
-                ]}
-              >
-                <Ionicons name="log-out-outline" size={22} color={colors.error} />
-                <ThemedText style={{ color: colors.error, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
-                  Log Out
-                </ThemedText>
-              </Pressable>
             </View>
           </Animated.View>
 
@@ -219,17 +215,5 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     marginTop: Spacing.two,
-  },
-  logoutBtn: {
-    minHeight: Spacing.touchTarget,
-    borderRadius: Rounded.default,
-    borderWidth: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-    marginBottom: Spacing.four,
   },
 });

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, useColorScheme, Alert, Platform, Modal } from 'react-native';
+import { StyleSheet, View, Pressable, useColorScheme, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 
 import type { Folder } from '@/hooks/use-vault';
-import { Colors, Spacing, Rounded } from '@/constants/theme';
+import { Colors, Spacing, Rounded, Shadows } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
 
 interface FolderCardProps {
   folder: Folder;
@@ -14,6 +15,7 @@ interface FolderCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
 }
+
 export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit, onDelete }: FolderCardProps) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
@@ -55,7 +57,7 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit
 
   return (
     <Pressable 
-      style={[styles.card, { width: cardWidth, backgroundColor: colors.backgroundElement }]}
+      style={[styles.card, { width: cardWidth, backgroundColor: colors.backgroundElement, borderColor: 'transparent', ...Shadows.card as any }]}
       onPress={onPress}
     >
       {cover ? (
@@ -68,12 +70,12 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit
       <View style={styles.cardInfo}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View style={{ flex: 1, marginRight: Spacing.two }}>
-            <Text style={[styles.cardCategory, { color: colors.primary }]} numberOfLines={1}>
+            <ThemedText style={[styles.cardCategory, { color: colors.primary }]} numberOfLines={1}>
               {folder.memory_categories?.category_name || getCategoryName(folder.category_id)}
-            </Text>
-            <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
+            </ThemedText>
+            <ThemedText style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
               {folder.name}
-            </Text>
+            </ThemedText>
           </View>
           {onEdit && onDelete && (
             <View style={{ position: 'relative', zIndex: 999 }}>
@@ -110,7 +112,7 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit
                       }}
                     >
                       <Ionicons name="create-outline" size={18} color={colors.primary} />
-                      <Text style={[styles.popoverText, { color: colors.text }]}>Edit</Text>
+                      <ThemedText style={[styles.popoverText, { color: colors.text }]}>Edit</ThemedText>
                     </Pressable>
                     <Pressable 
                       style={[styles.popoverItem, { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' }]} 
@@ -120,7 +122,7 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit
                       }}
                     >
                       <Ionicons name="trash-outline" size={18} color={colors.error} />
-                      <Text style={[styles.popoverText, { color: colors.error }]}>Delete</Text>
+                      <ThemedText style={[styles.popoverText, { color: colors.error }]}>Delete</ThemedText>
                     </Pressable>
                   </View>
                 </>
@@ -129,24 +131,24 @@ export function FolderCard({ folder, onPress, cardWidth, getCategoryName, onEdit
           )}
         </View>
         {!!folder.desc && (
-          <Text style={[styles.cardDesc, { color: colors.textSecondary }]} numberOfLines={2}>
+          <ThemedText style={[styles.cardDesc, { color: colors.textSecondary }]} numberOfLines={2}>
             {folder.desc}
-          </Text>
+          </ThemedText>
         )}
         {/* Date & Uploader row */}
         <View style={styles.cardMeta}>
           <View style={styles.cardMetaRow}>
             <Ionicons name="calendar-outline" size={13} color={colors.textSecondary} />
-            <Text style={[styles.cardMetaText, { color: colors.textSecondary }]}>
+            <ThemedText style={[styles.cardMetaText, { color: colors.textSecondary }]}>
               {folder.folder_date ? formatDate(folder.folder_date) : formatDate(folder.created_at.split('T')[0])}
-            </Text>
+            </ThemedText>
           </View>
           {uploaderName && (
             <View style={styles.cardMetaRow}>
               <Ionicons name="person-outline" size={13} color={colors.textSecondary} />
-              <Text style={[styles.cardMetaText, { color: colors.textSecondary }]} numberOfLines={1}>
+              <ThemedText style={[styles.cardMetaText, { color: colors.textSecondary }]} numberOfLines={1}>
                 By {uploaderName}
-              </Text>
+              </ThemedText>
             </View>
           )}
         </View>

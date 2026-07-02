@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     fontSize: 22,
     color: Colors.light.primary,
+    flexShrink: 1,
   },
   headerRight: {
     flexDirection: 'row',

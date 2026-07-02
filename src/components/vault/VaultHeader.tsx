@@ -2,7 +2,6 @@ import React from 'react';
 import { 
   StyleSheet, 
   View, 
-  Text, 
   ScrollView, 
   Pressable, 
   TextInput, 
@@ -12,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import type { Category } from '@/hooks/use-vault';
 import { Colors, Spacing, Rounded } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
 
 interface VaultHeaderProps {
   searchQuery: string;
@@ -44,24 +44,24 @@ export function VaultHeader({
       {/* Title block */}
       <View style={styles.headerRow}>
         <View>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
+          <ThemedText style={[styles.headerTitle, { color: colors.text }]}>
             {activeVaultOwnerId ? `${currentSeniorName}'s Vault` : 'Memory Vault'}
-          </Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          </ThemedText>
+          <ThemedText style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
             {activeVaultOwnerId 
               ? `Viewing memory folders for ${currentSeniorName}`
               : 'Store and share memories, folders, and documents'
             }
-          </Text>
+          </ThemedText>
         </View>
       </View>
 
       {/* Switcher bar: show if caregiver has 1 or more connected seniors */}
       {connectedSeniors.length >= 1 && (
         <View style={styles.vaultSwitcherSection}>
-          <Text style={[styles.vaultSwitcherLabel, { color: colors.textSecondary }]}>
+          <ThemedText style={[styles.vaultSwitcherLabel, { color: colors.textSecondary }]}>
             Select Senior Citizen:
-          </Text>
+          </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.vaultSwitcherScroll}>
             {connectedSeniors.map(senior => {
               const isSelected = activeVaultOwnerId === senior.id;
@@ -82,13 +82,13 @@ export function VaultHeader({
                     size={18} 
                     color={isSelected ? '#fff' : colors.text} 
                   />
-                  <Text style={{ 
+                  <ThemedText style={{ 
                     color: isSelected ? '#fff' : colors.text,
                     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
                     fontSize: 14
                   }}>
                     {senior.name}
-                  </Text>
+                  </ThemedText>
                 </Pressable>
               );
             })}
@@ -122,12 +122,12 @@ export function VaultHeader({
           ]}
           onPress={() => setActiveCategoryFilter('all')}
         >
-          <Text style={{ 
+          <ThemedText style={{ 
             color: activeCategoryFilter === 'all' ? '#fff' : colors.text,
             fontFamily: 'AtkinsonHyperlegibleNext-Bold' 
           }}>
             All
-          </Text>
+          </ThemedText>
         </Pressable>
 
         {categories.map(category => (
@@ -139,12 +139,12 @@ export function VaultHeader({
             ]}
             onPress={() => setActiveCategoryFilter(category.id.toString())}
           >
-            <Text style={{ 
+            <ThemedText style={{ 
               color: activeCategoryFilter === category.id.toString() ? '#fff' : colors.text,
               fontFamily: 'AtkinsonHyperlegibleNext-Bold' 
             }}>
               {category.category_name}
-            </Text>
+            </ThemedText>
           </Pressable>
         ))}
       </ScrollView>
@@ -161,8 +161,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: 'AtkinsonHyperlegibleNext-Bold',
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 32,
+    lineHeight: 38,
   },
   headerSubtitle: {
     fontFamily: 'AtkinsonHyperlegibleNext-Regular',

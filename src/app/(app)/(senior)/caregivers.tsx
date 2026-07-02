@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, useColorScheme, Alert, Image, Modal } from 'react-native';
+import { View, StyleSheet, Pressable, FlatList, Alert, Modal, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors } from '@/constants/theme';
+import { Colors, Spacing, Rounded, MaxContentWidth, Shadows } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from 'react-native';
 
 type Profile = {
   id: string;
@@ -24,7 +28,7 @@ export default function SeniorCaregiversPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-   const [pendingInvitations, setPendingInvitations] = useState<ConnectionItem[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<ConnectionItem[]>([]);
   const [connectedCaregivers, setConnectedCaregivers] = useState<ConnectionItem[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -105,178 +109,183 @@ export default function SeniorCaregiversPage() {
   };
 
   const renderPendingItem = ({ item }: { item: ConnectionItem }) => (
-    <View style={[styles.pendingCard, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}>
+    <View style={[styles.pendingCard, { backgroundColor: colors.backgroundElement }]}>
       <View style={styles.profileInfo}>
         <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
           {item.avatar_url ? (
-             <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+             <Image source={item.avatar_url} style={styles.avatar} contentFit="cover" />
           ) : (
-            <Text style={[styles.avatarInitials, { color: colors.primary }]}>
+            <ThemedText style={[styles.avatarInitials, { color: colors.primary }]}>
               {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
-            </Text>
+            </ThemedText>
           )}
         </View>
         <View style={styles.nameContainer}>
-          <Text style={[styles.profileName, { color: colors.text }]}>
+          <ThemedText style={[styles.profileName, { color: colors.text }]}>
             {item.first_name} {item.last_name}
-          </Text>
-          <Text style={[styles.profileRole, { color: colors.text + '80' }]}>Wants to connect</Text>
+          </ThemedText>
+          <ThemedText style={[styles.profileRole, { color: colors.textSecondary }]}>Wants to connect</ThemedText>
         </View>
       </View>
       <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.rejectButton]}
+        <Pressable 
+          style={[styles.actionButton, styles.rejectButton, { backgroundColor: colors.surfaceContainer }]}
           onPress={() => handleReject(item.connection_id)}
         >
-          <Text style={styles.rejectButtonText}>Decline</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
+          <ThemedText style={[styles.rejectButtonText, { color: colors.text }]}>Decline</ThemedText>
+        </Pressable>
+        <Pressable 
           style={[styles.actionButton, styles.acceptButton, { backgroundColor: colors.primary }]}
           onPress={() => {
             setSelectedConnection(item);
             setTermsModalVisible(true);
           }}
         >
-          <Text style={styles.acceptButtonText}>Accept</Text>
-        </TouchableOpacity>
+          <ThemedText style={[styles.acceptButtonText, { color: '#ffffff' }]}>Accept</ThemedText>
+        </Pressable>
       </View>
     </View>
   );
 
   const renderConnectedItem = ({ item }: { item: ConnectionItem }) => (
-    <TouchableOpacity 
-      style={[styles.connectedCard, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}
+    <Pressable 
+      style={({ pressed }) => [
+        styles.connectedCard, 
+        { backgroundColor: colors.backgroundElement },
+        pressed && { opacity: 0.8 }
+      ]}
       onPress={() => router.push(`/caregiver/${item.id}`)}
-      activeOpacity={0.7}
     >
       <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
         {item.avatar_url ? (
-           <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+           <Image source={item.avatar_url} style={styles.avatar} contentFit="cover" />
         ) : (
-          <Text style={[styles.avatarInitials, { color: colors.primary }]}>
+          <ThemedText style={[styles.avatarInitials, { color: colors.primary }]}>
             {(item.first_name?.[0] || '') + (item.last_name?.[0] || '')}
-          </Text>
+          </ThemedText>
         )}
       </View>
       <View style={styles.nameContainer}>
-        <Text style={[styles.profileName, { color: colors.text }]}>
+        <ThemedText style={[styles.profileName, { color: colors.text }]}>
           {item.first_name} {item.last_name}
-        </Text>
-        <Text style={[styles.profileRole, { color: colors.text + '80' }]}>Caregiver</Text>
+        </ThemedText>
+        <ThemedText style={[styles.profileRole, { color: colors.textSecondary }]}>Caregiver</ThemedText>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={colors.text + '40'} />
-    </TouchableOpacity>
+      <Ionicons name="chevron-forward" size={20} color={colors.outline} />
+    </Pressable>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Caregivers</Text>
-      </View>
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <View style={styles.header}>
+          <ThemedText style={[styles.title, { color: colors.text }]}>Caregivers</ThemedText>
+        </View>
 
-      <FlatList
-        data={connectedCaregivers}
-        keyExtractor={item => item.connection_id}
-        renderItem={renderConnectedItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        onRefresh={fetchConnections}
-        refreshing={loading}
-        ListHeaderComponent={
-          <>
-            {pendingInvitations.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Pending Invitations ({pendingInvitations.length})
-                </Text>
-                {pendingInvitations.map(item => (
-                  <React.Fragment key={item.connection_id}>
-                    {renderPendingItem({ item })}
-                  </React.Fragment>
-                ))}
+        <FlatList
+          data={connectedCaregivers}
+          keyExtractor={item => item.connection_id}
+          renderItem={renderConnectedItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onRefresh={fetchConnections}
+          refreshing={loading}
+          ListHeaderComponent={
+            <>
+              {pendingInvitations.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>
+                    Pending Invitations ({pendingInvitations.length})
+                  </ThemedText>
+                  {pendingInvitations.map(item => (
+                    <React.Fragment key={item.connection_id}>
+                      {renderPendingItem({ item })}
+                    </React.Fragment>
+                  ))}
+                </View>
+              )}
+
+              <ThemedText style={[styles.sectionTitle, { color: colors.text, marginTop: pendingInvitations.length ? Spacing.four : 0 }]}>
+                My Caregivers
+              </ThemedText>
+              
+              {!loading && connectedCaregivers.length === 0 && (
+                <View style={styles.emptyState}>
+                  <Ionicons name="medical-outline" size={48} color={colors.outline} />
+                  <ThemedText style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    You don&apos;t have any caregivers connected yet. Ask them to search for your name to send an invite!
+                  </ThemedText>
+                </View>
+              )}
+            </>
+          }
+        />
+
+        {/* TERMS & CONDITIONS ACCEPTANCE MODAL */}
+        <Modal
+          visible={termsModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => {
+            setTermsModalVisible(false);
+            setSelectedConnection(null);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: colors.backgroundElement }]}>
+              <ThemedText style={[styles.modalTitle, { color: colors.text }]}>Caregiver Access Terms</ThemedText>
+              
+              <ThemedText style={[styles.modalDesc, { color: colors.textSecondary }]}>
+                By accepting <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', color: colors.text }}>{selectedConnection?.first_name} {selectedConnection?.last_name}</ThemedText> as your caregiver, you agree to grant them permissions to:
+              </ThemedText>
+
+              <View style={styles.termsList}>
+                <View style={styles.termsItem}>
+                  <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} style={{ marginTop: 2 }} />
+                  <ThemedText style={[styles.termsText, { color: colors.text }]}>
+                    <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold' }}>Access Memory Vault:</ThemedText> View and create folders, and upload photos, videos, and documents to your vault.
+                  </ThemedText>
+                </View>
+                <View style={styles.termsItem}>
+                  <Ionicons name="medical-outline" size={22} color={colors.primary} style={{ marginTop: 2 }} />
+                  <ThemedText style={[styles.termsText, { color: colors.text }]}>
+                    <ThemedText style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold' }}>Add Medication & Schedule:</ThemedText> Create and modify routines, medication times, and calendar appointments.
+                  </ThemedText>
+                </View>
               </View>
-            )}
 
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: pendingInvitations.length ? 16 : 0 }]}>
-              My Caregivers
-            </Text>
-            
-            {!loading && connectedCaregivers.length === 0 && (
-              <View style={styles.emptyState}>
-                <Ionicons name="medical-outline" size={48} color={colors.text + '40'} />
-                <Text style={[styles.emptyText, { color: colors.text + '80' }]}>
-                  You don&apos;t have any caregivers connected yet. Ask them to search for your name to send an invite!
-                </Text>
-              </View>
-            )}
-          </>
-        }
-      />
+              <ThemedText style={[styles.modalWarning, { color: colors.error }]}>
+                Make sure you trust this person before granting them access to your data.
+              </ThemedText>
 
-      {/* TERMS & CONDITIONS ACCEPTANCE MODAL */}
-      <Modal
-        visible={termsModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => {
-          setTermsModalVisible(false);
-          setSelectedConnection(null);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.backgroundElement || (scheme === 'dark' ? '#1c1c1e' : '#ffffff') }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Caregiver Access Terms</Text>
-            
-            <Text style={[styles.modalDesc, { color: colors.text + 'b0' }]}>
-              By accepting <Text style={{ fontWeight: 'bold', color: colors.text }}>{selectedConnection?.first_name} {selectedConnection?.last_name}</Text> as your caregiver, you agree to grant them permissions to:
-            </Text>
-
-            <View style={styles.termsList}>
-              <View style={styles.termsItem}>
-                <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} style={{ marginTop: 2 }} />
-                <Text style={[styles.termsText, { color: colors.text }]}>
-                  <Text style={{ fontWeight: 'bold' }}>Access Memory Vault:</Text> View and create folders, and upload photos, videos, and documents to your vault.
-                </Text>
-              </View>
-              <View style={styles.termsItem}>
-                <Ionicons name="medical-outline" size={22} color={colors.primary} style={{ marginTop: 2 }} />
-                <Text style={[styles.termsText, { color: colors.text }]}>
-                  <Text style={{ fontWeight: 'bold' }}>Add Medication & Schedule:</Text> Create and modify routines, medication times, and calendar appointments.
-                </Text>
-              </View>
-            </View>
-
-            <Text style={[styles.modalWarning, { color: colors.error }]}>
-              Make sure you trust this person before granting them access to your data.
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalCancelBtn, { borderColor: colors.outline }]}
-                onPress={() => {
-                  setTermsModalVisible(false);
-                  setSelectedConnection(null);
-                }}
-              >
-                <Text style={[styles.modalCancelText, { color: colors.text }]}>Decline</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalAcceptBtn, { backgroundColor: colors.primary }]}
-                onPress={async () => {
-                  if (selectedConnection) {
-                    await handleAccept(selectedConnection.connection_id);
+              <View style={styles.modalButtons}>
+                <Pressable
+                  style={[styles.modalBtn, styles.modalCancelBtn, { borderColor: colors.outline }]}
+                  onPress={() => {
                     setTermsModalVisible(false);
                     setSelectedConnection(null);
-                  }
-                }}
-              >
-                <Text style={styles.modalAcceptText}>Agree & Accept</Text>
-              </TouchableOpacity>
+                  }}
+                >
+                  <ThemedText style={[styles.modalCancelText, { color: colors.text }]}>Decline</ThemedText>
+                </Pressable>
+                <Pressable
+                  style={[styles.modalBtn, styles.modalAcceptBtn, { backgroundColor: colors.primary }]}
+                  onPress={async () => {
+                    if (selectedConnection) {
+                      await handleAccept(selectedConnection.connection_id);
+                      setTermsModalVisible(false);
+                      setSelectedConnection(null);
+                    }
+                  }}
+                >
+                  <ThemedText style={[styles.modalAcceptText, { color: '#ffffff' }]}>Agree & Accept</ThemedText>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
@@ -285,40 +294,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.two,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.five,
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    width: '100%',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Spacing.four,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: 20,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    marginBottom: Spacing.three,
   },
   pendingCard: {
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-    elevation: 2,
+    padding: Spacing.four,
+    borderRadius: Rounded.lg,
+    marginBottom: Spacing.three,
+    ...(Shadows.card as any),
   },
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.four,
   },
   avatarPlaceholder: {
     width: 48,
@@ -326,7 +334,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: Spacing.three,
     overflow: 'hidden',
   },
   avatar: {
@@ -334,100 +342,91 @@ const styles = StyleSheet.create({
     height: 48,
   },
   avatarInitials: {
-    fontWeight: 'bold',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
     fontSize: 18,
   },
   nameContainer: {
     flex: 1,
   },
   profileName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
   profileRole: {
-    fontSize: 13,
+    fontSize: 14,
     marginTop: 2,
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.three,
   },
   actionButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingVertical: Spacing.three,
+    borderRadius: Rounded.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rejectButton: {
-    backgroundColor: '#00000010',
   },
   rejectButtonText: {
-    color: '#333',
-    fontWeight: '600',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    fontSize: 16,
   },
   acceptButton: {
   },
   acceptButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    fontSize: 16,
   },
   connectedCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-    elevation: 2,
+    padding: Spacing.four,
+    borderRadius: Rounded.lg,
+    marginBottom: Spacing.three,
+    ...(Shadows.card as any),
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
-    marginTop: 20,
+    padding: Spacing.five,
+    marginTop: Spacing.four,
   },
   emptyText: {
     textAlign: 'center',
-    marginTop: 16,
-    fontSize: 14,
+    marginTop: Spacing.four,
+    fontSize: 16,
     lineHeight: 22,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    padding: 24,
+    padding: Spacing.four,
   },
   modalContent: {
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    borderRadius: Rounded.lg,
+    padding: Spacing.five,
+    ...(Shadows.card as any),
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 12,
+    fontSize: 24,
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    marginBottom: Spacing.three,
   },
   modalDesc: {
     fontSize: 16,
     lineHeight: 22,
-    marginBottom: 16,
+    marginBottom: Spacing.four,
   },
   termsList: {
-    gap: 12,
-    marginBottom: 20,
+    gap: Spacing.three,
+    marginBottom: Spacing.five,
   },
   termsItem: {
     flexDirection: 'row',
-    gap: 10,
+    gap: Spacing.two,
     alignItems: 'flex-start',
   },
   termsText: {
@@ -438,16 +437,16 @@ const styles = StyleSheet.create({
   modalWarning: {
     fontSize: 14,
     fontStyle: 'italic',
-    marginBottom: 24,
+    marginBottom: Spacing.five,
   },
   modalButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.three,
   },
   modalBtn: {
     flex: 1,
     height: 48,
-    borderRadius: 12,
+    borderRadius: Rounded.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -458,11 +457,10 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
   modalAcceptText: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
   },
 });

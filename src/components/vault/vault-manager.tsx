@@ -8,7 +8,9 @@ import {
   useColorScheme, 
   ActivityIndicator, 
   Platform,
-  Alert
+  Alert,
+  TouchableOpacity,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from 'expo-router';
@@ -26,6 +28,9 @@ import { FolderDetailView } from './FolderDetailView';
 import { FilePreviewModal } from './FilePreviewModal';
 import { FileRenameModal } from './FileRenameModal';
 import { FolderFormModal } from './FolderFormModal';
+import { CapsuleList } from './CapsuleList';
+import { CreateCapsuleModal } from './CreateCapsuleModal';
+import { useCapsules } from '@/hooks/use-capsules';
 
 export function VaultManager() {
   const scheme = useColorScheme();
@@ -54,15 +59,28 @@ export function VaultManager() {
     connectedSeniors,
     activeVaultOwnerId,
     setActiveVaultOwnerId,
+    refreshData
   } = useVault();
+
+  // Capsules Logic
+  const { 
+    capsules, 
+    loading: capsulesLoading, 
+    fetchCapsules, 
+    createCapsule 
+  } = useCapsules(activeVaultOwnerId);
 
   // Reset to folder list view whenever the vault tab gains focus
   // (e.g., user taps the vault tab while inside a folder detail view)
   useFocusEffect(
     useCallback(() => {
       setSelectedFolder(null);
-    }, [])
+      fetchCapsules();
+    }, [activeVaultOwnerId])
   );
+
+  // Tabs state
+  const [activeTab, setActiveTab] = useState<'memories' | 'capsules'>('memories');
 
   // Search & Filter state
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
@@ -72,11 +90,27 @@ export function VaultManager() {
   const [folderFormVisible, setFolderFormVisible] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
 
+  const [capsuleFormVisible, setCapsuleFormVisible] = useState(false);
+
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
 
   const [renameFileModalVisible, setRenameFileModalVisible] = useState(false);
   const [renamingFile, setRenamingFile] = useState<FileItem | null>(null);
+
+  // Pull to refresh state
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshData(),
+        fetchCapsules()
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshData, fetchCapsules]);
 
   // Helper dialogs
   const showConfirm = (title: string, message: string, onConfirm: () => void) => {
@@ -141,8 +175,10 @@ export function VaultManager() {
 
   const cardWidth = Math.min((width - Spacing.four * 2 - Spacing.three) / 2, (MaxContentWidth - Spacing.three) / 2);
 
+  const allVaultFiles = React.useMemo(() => folders.flatMap(f => f.memory_files || []), [folders]);
+
   // Loading indicator on first fetch
-  if (loading && folders.length === 0) {
+  if (loading && folders.length === 0 && activeTab === 'memories') {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -176,7 +212,11 @@ export function VaultManager() {
       {!selectedFolder ? (
         // Folder List View
         <>
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent} 
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          >
             <VaultHeader
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -188,36 +228,69 @@ export function VaultManager() {
               setActiveVaultOwnerId={setActiveVaultOwnerId}
             />
 
-            {filteredFolders.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="folder-open-outline" size={64} color={colors.outline} />
-                <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>No folders found</Text>
-                <Text style={[styles.emptyStateSub, { color: colors.outline }]}>Create a new folder to get started!</Text>
-              </View>
+            {/* Tabs */}
+            <View style={styles.tabsContainer}>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'memories' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]} 
+                onPress={() => setActiveTab('memories')}
+              >
+                <Text style={[styles.tabText, { color: activeTab === 'memories' ? colors.primary : colors.textSecondary }]}>All Memories</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'capsules' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]} 
+                onPress={() => setActiveTab('capsules')}
+              >
+                <Text style={[styles.tabText, { color: activeTab === 'capsules' ? colors.primary : colors.textSecondary }]}>Capsules</Text>
+              </TouchableOpacity>
+            </View>
+
+            {activeTab === 'memories' ? (
+              filteredFolders.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="folder-open-outline" size={64} color={colors.outline} />
+                  <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>No folders found</Text>
+                  <Text style={[styles.emptyStateSub, { color: colors.outline }]}>Create a new folder to get started!</Text>
+                </View>
+              ) : (
+                // Folders Grid
+                <View style={styles.grid}>
+                  {filteredFolders.map(folder => (
+                    <FolderCard
+                      key={folder.id}
+                      folder={folder}
+                      onPress={() => setSelectedFolder(folder)}
+                      cardWidth={cardWidth}
+                      getCategoryName={getCategoryName}
+                    />
+                  ))}
+                </View>
+              )
             ) : (
-              // Folders Grid
-              <View style={styles.grid}>
-                {filteredFolders.map(folder => (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    onPress={() => setSelectedFolder(folder)}
-                    cardWidth={cardWidth}
-                    getCategoryName={getCategoryName}
-                  />
-                ))}
-              </View>
+              // Capsules List
+              <CapsuleList capsules={capsules} loading={capsulesLoading} />
             )}
           </ScrollView>
           
-          <FAB 
-            onPress={() => {
-              setEditingFolder(null);
-              setFolderFormVisible(true);
-            }} 
-            iconName="plus" 
-            disableRotation={true} 
-          />
+          {activeTab === 'memories' ? (
+            <FAB 
+              onPress={() => {
+                setEditingFolder(null);
+                setFolderFormVisible(true);
+              }} 
+              iconName="plus" 
+              disableRotation={true} 
+            />
+          ) : (
+            userRole === 'caregiver' && (
+              <FAB 
+                onPress={() => {
+                  setCapsuleFormVisible(true);
+                }} 
+                iconName="gift" 
+                disableRotation={true} 
+              />
+            )
+          )}
         </>
       ) : (
         // Folder Detail View
@@ -270,6 +343,14 @@ export function VaultManager() {
         onSave={saveFolder}
         pickCoverImage={pickCoverImage}
       />
+
+      {/* CREATE CAPSULE MODAL */}
+      <CreateCapsuleModal
+        visible={capsuleFormVisible}
+        onClose={() => setCapsuleFormVisible(false)}
+        vaultFiles={allVaultFiles}
+        onSave={(title, message, date, fileIds) => createCapsule(title, message, date, fileIds, activeVaultOwnerId!)}
+      />
     </View>
   );
 }
@@ -293,6 +374,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
     paddingBottom: 100,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginBottom: Spacing.four,
+    borderBottomWidth: 1,
+    borderBottomColor: 'transparent',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontFamily: 'AtkinsonHyperlegibleNext-Bold',
+    fontSize: 16,
   },
   grid: {
     flexDirection: 'row',

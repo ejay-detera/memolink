@@ -337,12 +337,13 @@ export function FolderFormModal({
                     value={new Date(folderDate + 'T00:00:00')}
                     mode="date"
                     display="default"
-                    onChange={(event, selectedDate) => {
+                    onValueChange={(event, selectedDate) => {
                       setShowDatePicker(false);
                       if (selectedDate) {
                         setFolderDate(selectedDate.toISOString().split('T')[0]);
                       }
                     }}
+                    onDismiss={() => setShowDatePicker(false)}
                   />
                 )}
               </>

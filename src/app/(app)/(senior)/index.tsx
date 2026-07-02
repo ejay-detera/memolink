@@ -17,6 +17,8 @@ import { StatusChip } from '@/components/ui/StatusChip';
 import { Colors, Spacing, MaxContentWidth, Rounded } from '@/constants/theme';
 import { HeaderActions } from '@/components/ui/header-actions';
 import { useAuth } from '@/hooks/use-auth';
+import { useCapsules } from '@/hooks/use-capsules';
+import { isToday, isPast, parseISO } from 'date-fns';
 
 // Mood button component with animation
 function MoodButton({ icon, label, selected, onPress }: { icon: any, label: string, selected: boolean, onPress: () => void }) {
@@ -46,6 +48,8 @@ export default function HomeScreen() {
   const [mood, setMood] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
 
+  const { capsules } = useCapsules(null);
+  
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!user) return;
@@ -66,6 +70,12 @@ export default function HomeScreen() {
     fetchAppointments();
   }, [user]);
 
+  // Find newly triggered capsules
+  const availableCapsules = capsules.filter(c => {
+    const d = parseISO(c.trigger_date);
+    return (isToday(d) || isPast(d)) && !c.is_viewed;
+  });
+
   const formatTimeStr = (timeStr: string) => {
     const [h, m] = timeStr.split(':');
     let hours = parseInt(h, 10);
@@ -74,7 +84,7 @@ export default function HomeScreen() {
     return `${hours}:${m} ${ampm}`;
   };
 
-  const isToday = (dateStr: string) => {
+  const isAppointmentToday = (dateStr: string) => {
     const today = new Date().toISOString().split('T')[0];
     return dateStr === today;
   };
@@ -108,6 +118,41 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
+          {/* New Capsules Banner */}
+          {availableCapsules.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(250)} style={{ marginBottom: Spacing.four }}>
+              {availableCapsules.map((cap, index) => (
+                <Pressable 
+                  key={cap.id} 
+                  onPress={() => router.push(`/capsules/${cap.id}` as any)}
+                  style={({ pressed }) => [
+                    styles.capsuleBanner,
+                    { 
+                      backgroundColor: colors.primary, 
+                      borderColor: colors.primary,
+                      transform: [{ scale: pressed ? 0.98 : 1 }]
+                    }
+                  ]}
+                >
+                  <View style={styles.capsuleBannerContent}>
+                    <View style={styles.capsuleIconContainer}>
+                      <SymbolView name="gift.fill" tintColor={colors.primary} size={28} />
+                    </View>
+                    <View style={{ flex: 1, paddingLeft: Spacing.three }}>
+                      <ThemedText style={{ color: colors.background, fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 18 }}>
+                        New Memory Capsule!
+                      </ThemedText>
+                      <ThemedText style={{ color: colors.background, opacity: 0.9 }}>
+                        {cap.title}
+                      </ThemedText>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color={colors.background} />
+                  </View>
+                </Pressable>
+              ))}
+            </Animated.View>
+          )}
+
           {/* Schedule */}
           <Animated.View entering={FadeInDown.delay(300)}>
             <SectionHeader title="Upcoming Appointments" />
@@ -125,7 +170,7 @@ export default function HomeScreen() {
                         {apt.title}
                       </ThemedText>
                       <ThemedText style={{ color: colors.textSecondary }} numberOfLines={1}>
-                        {isToday(apt.appointment_date) 
+                        {isAppointmentToday(apt.appointment_date) 
                           ? 'Today' 
                           : new Date(apt.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         } • {formatTimeStr(apt.start_time)}
@@ -232,5 +277,28 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     marginTop: Spacing.two,
     marginBottom: Spacing.four,
+  },
+  capsuleBanner: {
+    borderRadius: Rounded.lg,
+    padding: Spacing.three,
+    borderWidth: 1,
+    marginBottom: Spacing.two,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  capsuleBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  capsuleIconContainer: {
+    backgroundColor: '#fff',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

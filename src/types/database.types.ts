@@ -148,7 +148,7 @@ export type Database = {
       }
       memory_capsules: {
         Row: {
-          caregiver_id: string
+          caregiver_id: string | null
           created_at: string
           id: string
           is_viewed: boolean
@@ -158,7 +158,7 @@ export type Database = {
           trigger_date: string
         }
         Insert: {
-          caregiver_id: string
+          caregiver_id?: string | null
           created_at?: string
           id?: string
           is_viewed?: boolean
@@ -168,7 +168,7 @@ export type Database = {
           trigger_date: string
         }
         Update: {
-          caregiver_id?: string
+          caregiver_id?: string | null
           created_at?: string
           id?: string
           is_viewed?: boolean

@@ -77,6 +77,9 @@ export function useCapsules(seniorId: string | null) {
   ) => {
     if (!user) return null;
     try {
+      const finalSeniorId = userRole === 'senior' ? user.id : targetSeniorId;
+      const finalCaregiverId = userRole === 'caregiver' ? user.id : null;
+
       // 1. Insert the capsule
       const { data: capsule, error: capsuleError } = await supabase
         .from('memory_capsules')
@@ -84,8 +87,8 @@ export function useCapsules(seniorId: string | null) {
           title,
           message,
           trigger_date: triggerDate,
-          senior_id: targetSeniorId,
-          caregiver_id: user.id,
+          senior_id: finalSeniorId,
+          caregiver_id: finalCaregiverId,
           is_viewed: false,
         })
         .select()

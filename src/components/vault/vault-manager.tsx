@@ -281,15 +281,13 @@ export function VaultManager() {
               disableRotation={true}
             />
           ) : (
-            userRole === 'caregiver' && (
-              <FAB
-                onPress={() => {
-                  setCapsuleFormVisible(true);
-                }}
-                iconName="gift"
-                disableRotation={true}
-              />
-            )
+            <FAB
+              onPress={() => {
+                setCapsuleFormVisible(true);
+              }}
+              iconName="gift"
+              disableRotation={true}
+            />
           )}
         </>
       ) : (
@@ -349,7 +347,7 @@ export function VaultManager() {
         visible={capsuleFormVisible}
         onClose={() => setCapsuleFormVisible(false)}
         vaultFiles={allVaultFiles}
-        onSave={(title, message, date, fileIds) => createCapsule(title, message, date, fileIds, activeVaultOwnerId!)}
+        onSave={(title, message, date, fileIds) => createCapsule(title, message, date, fileIds, activeVaultOwnerId || '')}
       />
     </View>
   );

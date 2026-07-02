@@ -102,10 +102,15 @@ export default function HomeScreen() {
 
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
-            <ThemedText type="subtitle" style={{ color: colors.textSecondary }}>{today}</ThemedText>
-            <ThemedText type="title" style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32 }}>
-              Good Morning, {firstName}
-            </ThemedText>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="subtitle" style={{ color: colors.textSecondary }}>{today}</ThemedText>
+              <ThemedText type="title" style={{ fontFamily: 'AtkinsonHyperlegibleNext-Bold', fontSize: 32 }}>
+                Good Morning, {firstName}
+              </ThemedText>
+            </View>
+            <Pressable onPress={() => router.push('/notifications')} style={styles.notificationBell}>
+              <Ionicons name="notifications-outline" size={28} color={colors.text} />
+            </Pressable>
           </Animated.View>
 
           {/* Mood Check-in */}
@@ -198,7 +203,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.five,
+  },
+  notificationBell: {
+    padding: Spacing.two,
+    backgroundColor: '#00000005',
+    borderRadius: Rounded.full,
   },
   moodSection: {
     marginBottom: Spacing.four,

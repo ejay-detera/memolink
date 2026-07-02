@@ -228,11 +228,53 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          reference_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          reference_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          reference_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           email: string | null
+          expo_push_token: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -245,6 +287,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          expo_push_token?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -257,6 +300,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          expo_push_token?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null

@@ -21,6 +21,7 @@ export type Profile = {
   role: AppRole;
   avatar_url: string | null;
   phone: string | null;
+  expo_push_token: string | null;
   created_at: string;
   updated_at: string;
 };
